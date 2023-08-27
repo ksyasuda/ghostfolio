@@ -1,14 +1,16 @@
-<mat-radio-group
-  class="d-block text-nowrap"
-  [formControl]="option"
-  (change)="onValueChange()"
->
-  <mat-radio-button
-    *ngFor="let option of options"
-    class="d-inline-flex"
-    [disabled]="isLoading"
-    [ngClass]="{ 'cursor-pointer': !isLoading }"
-    [value]="option.value"
-    >{{ option.label }}</mat-radio-button
+<div #toggleContainer class="toggle-container">
+  <mat-radio-group
+    class="d-block text-nowrap"
+    [formControl]="option"
+    (change)="onValueChange()"
   >
-</mat-radio-group>
+    <mat-radio-button
+      *ngFor="let option of options"
+      class="d-inline-flex"
+      [disabled]="isLoading"
+      [ngClass]="{ 'cursor-pointer': !isLoading }"
+      [value]="option.value"
+      >{{ option.label }}</mat-radio-button
+    >
+  </mat-radio-group>
+</div>
