@@ -41,7 +41,7 @@
           >
         </mat-card-header>
         <mat-card-content>
-          <div *ngFor="let position of top3; let i = index" class="py-1">
+          <div *ngFor="let position of topx; let i = index" class="py-1">
             <a
               class="d-flex"
               [queryParams]="{
@@ -68,7 +68,7 @@
           </div>
           <div>
             <ngx-skeleton-loader
-              *ngIf="!top3"
+              *ngIf="!topx"
               animation="pulse"
               [theme]="{
                 height: '1.5rem',
@@ -87,7 +87,7 @@
           >
         </mat-card-header>
         <mat-card-content>
-          <div *ngFor="let position of bottom3; let i = index" class="py-1">
+          <div *ngFor="let position of bottomx; let i = index" class="py-1">
             <a
               class="d-flex"
               [queryParams]="{
@@ -114,7 +114,7 @@
           </div>
           <div>
             <ngx-skeleton-loader
-              *ngIf="!bottom3"
+              *ngIf="!bottomx"
               animation="pulse"
               [theme]="{
                 height: '1.5rem',
