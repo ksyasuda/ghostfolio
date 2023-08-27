@@ -23,6 +23,11 @@
       }
     }
   }
+
+  .toggle-container {
+    height: auto;
+    text-align: center;
+  }
 }
 
 :host-context(.is-dark-theme) {
@@ -37,5 +42,10 @@
         color: rgba(var(--light-primary-text), 1);
       }
     }
+  }
+
+  .toggle-container {
+    height: auto;
+    text-align: center;
   }
 }
