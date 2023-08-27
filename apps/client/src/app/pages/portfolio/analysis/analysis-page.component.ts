@@ -36,7 +36,6 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
   public allFilters: Filter[];
   public benchmarkDataItems: HistoricalDataItem[] = [];
   public benchmarks: Partial<SymbolProfile>[];
-  public bottomx: Position[];
   public dateRangeOptions = ToggleComponent.DEFAULT_DATE_RANGE_OPTIONS;
   public daysInMarket: number;
   public deviceType: string;
@@ -60,10 +59,15 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
   public placeholder = '';
   public portfolioEvolutionDataLabel = $localize`Deposit`;
   public streaks: PortfolioInvestments['streaks'];
-  public topx: Position[];
+  public positions: Position[];
+  public positionsReversed: Position[];
   public unitCurrentStreak: string;
   public unitLongestStreak: string;
   public user: User;
+  public num_positions: number;
+  public showAllTop: boolean = false;
+  public showAllBottom: boolean = false;
+  public topn: number = 5;
 
   private unsubscribeSubject = new Subject<void>();
 
@@ -311,6 +315,14 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
       });
   }
 
+  public toggleList(l: string) {
+    if (l === 'top') {
+      this.showAllTop = !this.showAllTop;
+    } else if (l === 'bottom') {
+      this.showAllBottom = !this.showAllBottom;
+    }
+  }
+
   private update() {
     this.isLoadingBenchmarkComparator = true;
     this.isLoadingInvestmentChart = true;
@@ -372,13 +384,8 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
           'netPerformancePercentage'
         ).reverse();
 
-        this.topx = positionsSorted.slice(0, 5);
-
-        if (positions?.length > 5) {
-          this.bottomx = positionsSorted.slice(-5).reverse();
-        } else {
-          this.bottomx = [];
-        }
+        this.positions = positionsSorted;
+        this.positionsReversed = [...positionsSorted].reverse();
 
         this.changeDetectorRef.markForCheck();
       });
