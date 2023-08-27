@@ -36,7 +36,7 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
   public allFilters: Filter[];
   public benchmarkDataItems: HistoricalDataItem[] = [];
   public benchmarks: Partial<SymbolProfile>[];
-  public bottom3: Position[];
+  public bottomx: Position[];
   public dateRangeOptions = ToggleComponent.DEFAULT_DATE_RANGE_OPTIONS;
   public daysInMarket: number;
   public deviceType: string;
@@ -60,7 +60,7 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
   public placeholder = '';
   public portfolioEvolutionDataLabel = $localize`Deposit`;
   public streaks: PortfolioInvestments['streaks'];
-  public top3: Position[];
+  public topx: Position[];
   public unitCurrentStreak: string;
   public unitLongestStreak: string;
   public user: User;
@@ -372,12 +372,12 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
           'netPerformancePercentage'
         ).reverse();
 
-        this.top3 = positionsSorted.slice(0, 3);
+        this.topx = positionsSorted.slice(0, 5);
 
-        if (positions?.length > 3) {
-          this.bottom3 = positionsSorted.slice(-3).reverse();
+        if (positions?.length > 5) {
+          this.bottomx = positionsSorted.slice(-5).reverse();
         } else {
-          this.bottom3 = [];
+          this.bottomx = [];
         }
 
         this.changeDetectorRef.markForCheck();
