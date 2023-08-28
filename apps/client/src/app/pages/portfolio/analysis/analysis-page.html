@@ -37,7 +37,7 @@
       <mat-card appearance="outlined" class="mb-3">
         <mat-card-header>
           <mat-card-title class="align-items-center d-flex" i18n
-            >Top</mat-card-title
+            >Top 5</mat-card-title
           >
         </mat-card-header>
         <mat-card-content>
@@ -90,6 +90,7 @@
         </mat-paginator>
       </mat-card>
       <button
+        class="toggle-performance-list"
         color="{{showAllTop ? 'accent' : 'primary'}}"
         mat-button
         (click)="toggleList('top')"
@@ -101,7 +102,7 @@
       <mat-card appearance="outlined" class="mb-3">
         <mat-card-header>
           <mat-card-title class="align-items-center d-flex" i18n
-            >Bottom</mat-card-title
+            >Bottom 5</mat-card-title
           >
         </mat-card-header>
         <mat-card-content>
@@ -154,6 +155,7 @@
         </mat-paginator>
       </mat-card>
       <button
+        class="toggle-performance-list"
         color="{{showAllBottom ? 'accent' : 'primary'}}"
         mat-button
         (click)="toggleList('bottom')"
