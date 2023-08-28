@@ -65,10 +65,8 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
   public unitCurrentStreak: string;
   public unitLongestStreak: string;
   public user: User;
-  public num_positions: number;
   public showAllTop: boolean = false;
   public showAllBottom: boolean = false;
-  public topn: number = 5;
   public pageSize: number = 10;
   public pageIndexTop: number = 0;
   public pageIndexBottom: number = 0;
