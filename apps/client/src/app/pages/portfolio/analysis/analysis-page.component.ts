@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { PositionDetailDialogParams } from '@ghostfolio/client/components/position/position-detail-dialog/interfaces/interfaces';
 import { PositionDetailDialog } from '@ghostfolio/client/components/position/position-detail-dialog/position-detail-dialog.component';
 import { ToggleComponent } from '@ghostfolio/client/components/toggle/toggle.component';
@@ -36,7 +37,6 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
   public allFilters: Filter[];
   public benchmarkDataItems: HistoricalDataItem[] = [];
   public benchmarks: Partial<SymbolProfile>[];
-  public bottomx: Position[];
   public dateRangeOptions = ToggleComponent.DEFAULT_DATE_RANGE_OPTIONS;
   public daysInMarket: number;
   public deviceType: string;
@@ -60,10 +60,16 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
   public placeholder = '';
   public portfolioEvolutionDataLabel = $localize`Deposit`;
   public streaks: PortfolioInvestments['streaks'];
-  public topx: Position[];
+  public positions: Position[];
+  public positionsReversed: Position[];
   public unitCurrentStreak: string;
   public unitLongestStreak: string;
   public user: User;
+  public showAllTop: boolean = false;
+  public showAllBottom: boolean = false;
+  public pageSize: number = 10;
+  public pageIndexTop: number = 0;
+  public pageIndexBottom: number = 0;
 
   private unsubscribeSubject = new Subject<void>();
 
@@ -225,6 +231,15 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
     this.unsubscribeSubject.complete();
   }
 
+  public pageChanged(event: PageEvent, section: 'top' | 'bottom') {
+    const newPageIndex = event.pageIndex;
+    if (section === 'top') {
+      this.pageIndexTop = newPageIndex;
+    } else if (section === 'bottom') {
+      this.pageIndexBottom = newPageIndex;
+    }
+  }
+
   private fetchDividendsAndInvestments() {
     this.dataService
       .fetchDividends({
@@ -311,6 +326,16 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
       });
   }
 
+  public toggleList(l: string) {
+    if (l === 'top') {
+      this.showAllTop = !this.showAllTop;
+      this.pageIndexTop = 0;
+    } else if (l === 'bottom') {
+      this.showAllBottom = !this.showAllBottom;
+      this.pageIndexBottom = 0;
+    }
+  }
+
   private update() {
     this.isLoadingBenchmarkComparator = true;
     this.isLoadingInvestmentChart = true;
@@ -372,13 +397,8 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
           'netPerformancePercentage'
         ).reverse();
 
-        this.topx = positionsSorted.slice(0, 5);
-
-        if (positions?.length > 5) {
-          this.bottomx = positionsSorted.slice(-5).reverse();
-        } else {
-          this.bottomx = [];
-        }
+        this.positions = positionsSorted;
+        this.positionsReversed = [...positionsSorted].reverse();
 
         this.changeDetectorRef.markForCheck();
       });

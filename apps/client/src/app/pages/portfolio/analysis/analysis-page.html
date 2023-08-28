@@ -37,22 +37,25 @@
       <mat-card appearance="outlined" class="mb-3">
         <mat-card-header>
           <mat-card-title class="align-items-center d-flex" i18n
-            >Top</mat-card-title
+            >Top 5</mat-card-title
           >
         </mat-card-header>
         <mat-card-content>
-          <div *ngFor="let position of topx; let i = index" class="py-1">
+          <div
+            *ngFor="let position of (showAllTop ? positions.slice(pageIndexTop * pageSize, (pageIndexTop + 1) * pageSize) : positions | slice:0:5); let i = index"
+            class="py-1"
+          >
             <a
               class="d-flex"
               [queryParams]="{
-                dataSource: position.dataSource,
-                positionDetailDialog: true,
-                symbol: position.symbol
-              }"
+				  dataSource: position.dataSource,
+				  positionDetailDialog: true,
+				  symbol: position.symbol
+				}"
               [routerLink]="[]"
             >
               <div class="flex-grow-1 mr-2 text-truncate">
-                {{ i + 1 }}. {{ position.name }}
+                {{ (pageIndexTop * pageSize) + i + 1 }}. {{ position.name }}
               </div>
               <div class="d-flex justify-content-end">
                 <gf-value
@@ -68,37 +71,56 @@
           </div>
           <div>
             <ngx-skeleton-loader
-              *ngIf="!topx"
+              *ngIf="!positions"
               animation="pulse"
               [theme]="{
-                height: '1.5rem',
-                width: '100%'
-              }"
+				  height: '1.5rem',
+				  width: '100%'
+				}"
             ></ngx-skeleton-loader>
           </div>
         </mat-card-content>
+        <mat-paginator
+          *ngIf="showAllTop && positions.length > 10"
+          [length]="positions.length"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="[10, 20, 30, 40]"
+          (page)="pageChanged($event, 'top')"
+        >
+        </mat-paginator>
       </mat-card>
+      <button
+        class="toggle-performance-list"
+        color="{{showAllTop ? 'accent' : 'primary'}}"
+        mat-button
+        (click)="toggleList('top')"
+      >
+        {{ showAllTop ? 'Show Top 5' : 'Expand' }}
+      </button>
     </div>
     <div class="col-md-6">
       <mat-card appearance="outlined" class="mb-3">
         <mat-card-header>
           <mat-card-title class="align-items-center d-flex" i18n
-            >Bottom</mat-card-title
+            >Bottom 5</mat-card-title
           >
         </mat-card-header>
         <mat-card-content>
-          <div *ngFor="let position of bottomx; let i = index" class="py-1">
+          <div
+            *ngFor="let position of (showAllBottom ? positionsReversed.slice(pageIndexBottom * pageSize, (pageIndexBottom + 1) * pageSize) : positionsReversed | slice:0:5); let i = index"
+            class="py-1"
+          >
             <a
               class="d-flex"
               [queryParams]="{
-                dataSource: position.dataSource,
-                positionDetailDialog: true,
-                symbol: position.symbol
-              }"
+				  dataSource: position.dataSource,
+				  positionDetailDialog: true,
+				  symbol: position.symbol
+				}"
               [routerLink]="[]"
             >
               <div class="flex-grow-1 mr-2 text-truncate">
-                {{ i + 1 }}. {{ position.name }}
+                {{ (pageIndexBottom * pageSize) + i + 1 }}. {{ position.name }}
               </div>
               <div class="d-flex justify-content-end">
                 <gf-value
@@ -114,16 +136,32 @@
           </div>
           <div>
             <ngx-skeleton-loader
-              *ngIf="!bottomx"
+              *ngIf="!positionsReversed"
               animation="pulse"
               [theme]="{
-                height: '1.5rem',
-                width: '100%'
-              }"
+				  height: '1.5rem',
+				  width: '100%'
+				}"
             ></ngx-skeleton-loader>
           </div>
         </mat-card-content>
+        <mat-paginator
+          *ngIf="showAllBottom && positionsReversed.length > 10"
+          [length]="positions.length"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="[10, 20, 30, 40]"
+          (page)="pageChanged($event, 'bottom')"
+        >
+        </mat-paginator>
       </mat-card>
+      <button
+        class="toggle-performance-list"
+        color="{{showAllBottom ? 'accent' : 'primary'}}"
+        mat-button
+        (click)="toggleList('bottom')"
+      >
+        {{ showAllBottom ? 'Show Bottom 5' : 'Expand' }}
+      </button>
     </div>
   </div>
 
