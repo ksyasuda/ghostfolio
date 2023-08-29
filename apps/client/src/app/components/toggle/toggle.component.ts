@@ -24,13 +24,14 @@ export class ToggleComponent implements OnChanges, OnInit, AfterViewInit {
 
   public static DEFAULT_DATE_RANGE_OPTIONS: ToggleOption[] = [
     { label: $localize`Today`, value: '1d' },
+    { label: $localize`5D`, value: '5d' },
     { label: $localize`1W`, value: '1w' },
-    { label: $localize`MTD`, value: 'mtd' },
     { label: $localize`1M`, value: '1m' },
     { label: $localize`3M`, value: '3m' },
+    { label: $localize`6M`, value: '6m' },
     { label: $localize`YTD`, value: 'ytd' },
     { label: $localize`1Y`, value: '1y' },
-    { label: $localize`5Y`, value: '5y' },
+    { label: $localize`3Y`, value: '3y' },
     { label: $localize`Max`, value: 'max' }
   ];
 
@@ -41,6 +42,7 @@ export class ToggleComponent implements OnChanges, OnInit, AfterViewInit {
   @Output() change = new EventEmitter<Pick<ToggleOption, 'value'>>();
 
   public option = new FormControl<string>(undefined);
+  public deviceType: string;
 
   public constructor() {}
 
@@ -55,8 +57,7 @@ export class ToggleComponent implements OnChanges, OnInit, AfterViewInit {
   }
 
   public ngAfterViewInit() {
-    const screenWidth = window.innerWidth;
-    if (screenWidth < 600) {
+    if (window.innerWidth < 768) {
       this.toggleContainer.nativeElement.style.overflowX = 'scroll';
       this.toggleContainer.nativeElement.style.height = '3rem';
     }

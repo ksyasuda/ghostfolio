@@ -398,7 +398,10 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
         ).reverse();
 
         this.positions = positionsSorted;
-        this.positionsReversed = [...positionsSorted].reverse();
+        this.positionsReversed = [];
+        if (this.positions.length > 5) {
+          this.positionsReversed = [...positionsSorted].reverse();
+        }
 
         this.changeDetectorRef.markForCheck();
       });

@@ -471,8 +471,9 @@ export class PortfolioService {
       transactionPoints[0]?.date ?? format(new Date(), DATE_FORMAT)
     );
     const startDate = this.getStartDate(dateRange, portfolioStart);
-    const currentPositions =
-      await portfolioCalculator.getCurrentPositions(startDate);
+    const currentPositions = await portfolioCalculator.getCurrentPositions(
+      startDate
+    );
 
     const cashDetails = await this.accountService.getCashDetails({
       filters,
@@ -810,8 +811,9 @@ export class PortfolioService {
     const transactionPoints = portfolioCalculator.getTransactionPoints();
 
     const portfolioStart = parseDate(transactionPoints[0].date);
-    const currentPositions =
-      await portfolioCalculator.getCurrentPositions(portfolioStart);
+    const currentPositions = await portfolioCalculator.getCurrentPositions(
+      portfolioStart
+    );
 
     const position = currentPositions.positions.find(
       (item) => item.symbol === aSymbol
@@ -1045,8 +1047,9 @@ export class PortfolioService {
 
     const portfolioStart = parseDate(transactionPoints[0].date);
     const startDate = this.getStartDate(dateRange, portfolioStart);
-    const currentPositions =
-      await portfolioCalculator.getCurrentPositions(startDate);
+    const currentPositions = await portfolioCalculator.getCurrentPositions(
+      startDate
+    );
 
     const positions = currentPositions.positions.filter(
       (item) => !item.quantity.eq(0)
@@ -1236,8 +1239,9 @@ export class PortfolioService {
     portfolioCalculator.setTransactionPoints(transactionPoints);
 
     const portfolioStart = parseDate(transactionPoints[0].date);
-    const currentPositions =
-      await portfolioCalculator.getCurrentPositions(portfolioStart);
+    const currentPositions = await portfolioCalculator.getCurrentPositions(
+      portfolioStart
+    );
 
     const positions = currentPositions.positions.filter(
       (item) => !item.quantity.eq(0)
@@ -1576,16 +1580,16 @@ export class PortfolioService {
           subDays(new Date().setHours(0, 0, 0, 0), 1)
         ]);
         break;
+      case '5d':
+        portfolioStart = max([
+          portfolioStart,
+          subDays(new Date().setHours(0, 0, 0, 0), 5)
+        ]);
+        break;
       case '1w':
         portfolioStart = max([
           portfolioStart,
           subDays(new Date().setHours(0, 0, 0, 0), 7)
-        ]);
-        break;
-      case 'mtd':
-        portfolioStart = max([
-          portfolioStart,
-          new Date(new Date().setDate(1)).setHours(0, 0, 0, 0)
         ]);
         break;
       case '1m':
@@ -1600,6 +1604,12 @@ export class PortfolioService {
           subMonths(new Date().setHours(0, 0, 0, 0), 3)
         ]);
         break;
+      case '6m':
+        portfolioStart = max([
+          portfolioStart,
+          subMonths(new Date().setHours(0, 0, 0, 0), 6)
+        ]);
+        break;
       case 'ytd':
         portfolioStart = max([
           portfolioStart,
@@ -1612,10 +1622,10 @@ export class PortfolioService {
           subYears(new Date().setHours(0, 0, 0, 0), 1)
         ]);
         break;
-      case '5y':
+      case '3y':
         portfolioStart = max([
           portfolioStart,
-          subYears(new Date().setHours(0, 0, 0, 0), 5)
+          subYears(new Date().setHours(0, 0, 0, 0), 3)
         ]);
         break;
     }
