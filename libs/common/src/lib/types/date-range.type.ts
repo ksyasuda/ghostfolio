@@ -1,10 +1,11 @@
 export type DateRange =
   | '1d'
+  | '5d'
   | '1w'
-  | 'mtd'
   | '1m'
   | '3m'
+  | '6m'
   | '1y'
-  | '5y'
+  | '3y'
   | 'max'
   | 'ytd';
