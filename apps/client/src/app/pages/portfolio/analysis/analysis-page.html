@@ -37,7 +37,9 @@
       <mat-card appearance="outlined" class="mb-3">
         <mat-card-header>
           <mat-card-title class="align-items-center d-flex" i18n
-            >{{showAllTop ? 'Top' : 'Top 5'}}</mat-card-title
+            >{{showAllTop ? 'Top' : 'Top ' + (positions.length == 0 ? '' :
+            positions.length < 5 ? positions.length.toString() :
+            '5')}}</mat-card-title
           >
         </mat-card-header>
         <mat-card-content>
@@ -90,19 +92,22 @@
         </mat-paginator>
       </mat-card>
       <button
+        *ngIf="positions.length > 5"
         class="toggle-performance-list"
         color="{{showAllTop ? 'accent' : 'primary'}}"
         mat-button
         (click)="toggleList('top')"
       >
-        {{ showAllTop ? 'Show Top 5' : 'Expand' }}
+        {{ showAllTop ? 'Collapse' : 'Expand' }}
       </button>
     </div>
     <div class="col-md-6">
       <mat-card appearance="outlined" class="mb-3">
         <mat-card-header>
           <mat-card-title class="align-items-center d-flex" i18n
-            >{{showAllBottom ? 'Bottom' : 'Bottom 5'}}</mat-card-title
+            >{{showAllBottom ? 'Bottom' : 'Bottom ' + (positionsReversed.length
+            == 0 ? '' : positionsReversed.length < 5 ?
+            positionsReversed.length.toString() : '5')}}</mat-card-title
           >
         </mat-card-header>
         <mat-card-content>
@@ -155,12 +160,13 @@
         </mat-paginator>
       </mat-card>
       <button
+        *ngIf="positionsReversed.length > 5"
         class="toggle-performance-list"
         color="{{showAllBottom ? 'accent' : 'primary'}}"
         mat-button
         (click)="toggleList('bottom')"
       >
-        {{ showAllBottom ? 'Show Bottom 5' : 'Expand' }}
+        {{ showAllBottom ? 'Collapse' : 'Expand' }}
       </button>
     </div>
   </div>
