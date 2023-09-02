@@ -7,10 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added _Hacker News_ to the _As seen in_ section on the landing page
+
 ### Changed
 
 - Shortened the page titles
+- Improved the language localization for German (`de`)
 - Upgraded `prisma` from version `4.16.2` to `5.2.0`
+- Upgraded `replace-in-file` from version `6.3.5` to `7.0.1`
+- Upgraded `yahoo-finance2` from version `2.4.3` to `2.4.4`
+
+### Fixed
+
+- Fixed the alignment in the header navigation
+- Fixed the alignment in the menu of the impersonation mode
 
 ## 1.304.0 - 2023-08-27
 
