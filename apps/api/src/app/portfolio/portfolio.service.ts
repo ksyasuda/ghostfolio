@@ -11,12 +11,12 @@ import { AccountClusterRiskSingleAccount } from '@ghostfolio/api/models/rules/ac
 import { CurrencyClusterRiskBaseCurrencyCurrentInvestment } from '@ghostfolio/api/models/rules/currency-cluster-risk/base-currency-current-investment';
 import { CurrencyClusterRiskCurrentInvestment } from '@ghostfolio/api/models/rules/currency-cluster-risk/current-investment';
 import { FeeRatioInitialInvestment } from '@ghostfolio/api/models/rules/fees/fee-ratio-initial-investment';
-import { ConfigurationService } from '@ghostfolio/api/services/configuration/configuration.service';
 import { DataProviderService } from '@ghostfolio/api/services/data-provider/data-provider.service';
 import { ExchangeRateDataService } from '@ghostfolio/api/services/exchange-rate-data/exchange-rate-data.service';
 import { ImpersonationService } from '@ghostfolio/api/services/impersonation/impersonation.service';
 import { SymbolProfileService } from '@ghostfolio/api/services/symbol-profile/symbol-profile.service';
 import {
+  DEFAULT_CURRENCY,
   EMERGENCY_FUND_TAG_ID,
   MAX_CHART_ITEMS,
   UNKNOWN_KEY
@@ -91,11 +91,8 @@ const europeMarkets = require('../../assets/countries/europe-markets.json');
 
 @Injectable()
 export class PortfolioService {
-  private baseCurrency: string;
-
   public constructor(
     private readonly accountService: AccountService,
-    private readonly configurationService: ConfigurationService,
     private readonly currentRateService: CurrentRateService,
     private readonly dataProviderService: DataProviderService,
     private readonly exchangeRateDataService: ExchangeRateDataService,
@@ -105,9 +102,7 @@ export class PortfolioService {
     private readonly rulesService: RulesService,
     private readonly symbolProfileService: SymbolProfileService,
     private readonly userService: UserService
-  ) {
-    this.baseCurrency = this.configurationService.get('BASE_CURRENCY');
-  }
+  ) {}
 
   public async getAccounts({
     filters,
@@ -1803,7 +1798,7 @@ export class PortfolioService {
     portfolioOrders: PortfolioOrder[];
   }> {
     const userCurrency =
-      this.request.user?.Settings?.settings.baseCurrency ?? this.baseCurrency;
+      this.request.user?.Settings?.settings.baseCurrency ?? DEFAULT_CURRENCY;
 
     const orders = await this.orderService.getOrders({
       filters,
@@ -2025,7 +2020,7 @@ export class PortfolioService {
     return (
       aUser.Settings?.settings.baseCurrency ??
       this.request.user?.Settings?.settings.baseCurrency ??
-      this.baseCurrency
+      DEFAULT_CURRENCY
     );
   }
 
