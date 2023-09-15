@@ -7,13 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added support to drop a file in the import activities dialog
+- Added a timeout to all data source requests
+
 ### Changed
 
+- Harmonized the style of the user interface for granting and revoking public access to share the portfolio
+- Improved the logger output of the info service
 - Harmonized the logger output: <symbol> (<dataSource>)
+- Improved the language localization for Italian (`it`)
 - Improved the language localization for Dutch (`nl`)
+- Improved the read-only mode
 
 ### Fixed
 
+- Fixed the timeout in _EOD Historical Data_ requests
 - Fixed an issue with the portfolio summary caused by the language localization for Dutch (`nl`)
 
 ## 2.0.0 - 2023-09-09
@@ -1520,7 +1530,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Set up the language localization for Italiano (`it`)
+- Set up the language localization for Italian (`it`)
 - Extended the landing page
 
 ## 1.195.0 - 20.09.2022
@@ -2943,7 +2953,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Supported the management of additional currencies in the admin control panel
 - Introduced the system message
-- Introduced the read only mode
+- Introduced the read-only mode
 
 ### Changed
 
