@@ -9,14 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Introduced a sidebar navigation on desktop
+
+## 2.1.0 - 2023-09-15
+
+### Added
+
 - Added support to drop a file in the import activities dialog
 - Added a timeout to all data source requests
 
 ### Changed
 
 - Harmonized the style of the user interface for granting and revoking public access to share the portfolio
+- Removed the account type from the user interface as a preparation to remove it from the `Account` database schema
 - Improved the logger output of the info service
-- Harmonized the logger output: <symbol> (<dataSource>)
+- Harmonized the logger output: `<symbol> (<dataSource>)`
+- Improved the language localization for German (`de`)
 - Improved the language localization for Italian (`it`)
 - Improved the language localization for Dutch (`nl`)
 - Improved the read-only mode
