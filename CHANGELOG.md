@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added the version to the admin control panel
+- Added pagination parameters (`skip`, `take`) to the endpoint `GET api/v1/order`
+
+### Changed
+
+- Harmonized the settings icon of the user account page
+- Improved the usability to set an asset profile as a benchmark
+
 ### Fixed
 
 - Fixed the sidebar navigation on the user account page
