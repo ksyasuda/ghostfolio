@@ -5,11 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.9.0 - 2023-10-08
 
 ### Added
 
+- Added support to search for a holding by `isin`, `name` and `symbol` (experimental)
 - Added support for notes in the activities import
+- Added support to search in the platform selector of the create or update account dialog
 - Added support for a search query in the portfolio position endpoint
 - Added the application version to the endpoint `GET api/v1/admin`
 - Introduced a carousel component for the testimonial section on the landing page
