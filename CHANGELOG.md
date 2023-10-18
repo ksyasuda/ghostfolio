@@ -5,20 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.12.0 - 2023-10-17
 
 ### Added
 
 - Added the endpoint `GET api/v1/account/:id/balances` which provides historical cash balances
 - Added support to search for an asset profile by `isin`, `name` and `symbol` as an administrator (experimental)
+- Added support for creating asset profiles with `MANUAL` data source
 
 ### Changed
 
+- Changed the checkboxes to slide toggles in the user settings of the user account page
 - Extended the `copy-assets` `Nx` target to copy the locales to the server’s assets
+- Upgraded `@simplewebauthn/browser` and `@simplewebauthn/server` from version `5.2.1` to `8.3`
 
 ### Fixed
 
 - Displayed the transfer cash balance button based on a permission
+- Fixed the biometric authentication
+- Fixed the query to get asset profiles that match both the `dataSource` and `symbol` values
 
 ## 2.11.0 - 2023-10-14
 
