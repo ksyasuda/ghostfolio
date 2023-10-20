@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- Added a chart to the account detail dialog
+- Added an `i18n` service to query `messages.*.xlf` files on the server
+
+### Changed
+
+- Changed the users table in the admin control panel to an `@angular/material` data table
+- Improved the styling of the membership status
+
 ## 2.12.0 - 2023-10-17
 
 ### Added
