@@ -5,19 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.15.0 - 2023-10-26
+
+### Added
+
+- Added support to edit the name, asset class and asset sub class of asset profiles with `MANUAL` data source in the asset profile details dialog of the admin control panel
 
 ### Changed
 
 - Improved the style and wording of the position detail dialog
 - Improved the validation in the activities import (expects positive values for `fee`, `quantity` and `unitPrice`)
+- Improved the validation in the cash balance transfer from one to another account (expects a positive value)
 - Changed the currency selector in the create or update account dialog to `@angular/material/autocomplete`
+- Upgraded `Nx` from version `16.7.4` to `17.0.2`
 - Upgraded `uuid` from version `9.0.0` to `9.0.1`
 - Upgraded `yahoo-finance2` from version `2.8.0` to `2.8.1`
 
 ### Fixed
 
 - Fixed the chart in the account detail dialog for accounts excluded from analysis
+- Verified the current benchmark before loading it on the analysis page
 
 ## 2.14.0 - 2023-10-21
 
