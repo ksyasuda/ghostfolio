@@ -5,11 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.21.0 - 2023-11-09
+
+### Changed
+
+- Extended the system message
+
+### Fixed
+
+- Fixed the unit for the _Zen Mode_ in the overview tab of the home page
+- Fixed an issue to get quotes in the _Financial Modeling Prep_ service
+
 ## 2.20.0 - 2023-11-08
 
 ### Changed
 
-- Removed the loading indicator of the unit on the overview tab of the home page
+- Removed the loading indicator of the unit in the overview tab of the home page
 - Improved the import of historical market data in the admin control panel
 - Increased the timeout in the health check endpoint for data enhancers
 - Increased the timeout in the health check endpoint for data providers
