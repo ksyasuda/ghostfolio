@@ -18,6 +18,7 @@ import { PropertyDto } from '@ghostfolio/api/services/property/property.dto';
 import { DATE_FORMAT } from '@ghostfolio/common/helper';
 import {
   Access,
+  AccountBalancesResponse,
   Accounts,
   BenchmarkMarketDataDetails,
   BenchmarkResponse,
@@ -37,7 +38,7 @@ import {
 } from '@ghostfolio/common/interfaces';
 import { filterGlobalPermissions } from '@ghostfolio/common/permissions';
 import { AccountWithValue, DateRange, GroupBy } from '@ghostfolio/common/types';
-import { DataSource, Order as OrderModel } from '@prisma/client';
+import { DataSource, Order as OrderModel, Prisma } from '@prisma/client';
 import { format, parseISO } from 'date-fns';
 import { cloneDeep, groupBy, isNumber } from 'lodash';
 import { Observable } from 'rxjs';
@@ -137,28 +138,56 @@ export class DataService {
     return this.http.get<AccountWithValue>(`/api/v1/account/${aAccountId}`);
   }
 
+  public fetchAccountBalances(aAccountId: string) {
+    return this.http.get<AccountBalancesResponse>(
+      `/api/v1/account/${aAccountId}/balances`
+    );
+  }
+
   public fetchAccounts() {
     return this.http.get<Accounts>('/api/v1/account');
   }
 
   public fetchActivities({
-    filters
+    filters,
+    skip,
+    sortColumn,
+    sortDirection,
+    take
   }: {
     filters?: Filter[];
+    skip?: number;
+    sortColumn?: string;
+    sortDirection?: Prisma.SortOrder;
+    take?: number;
   }): Observable<Activities> {
-    return this.http
-      .get<any>('/api/v1/order', {
-        params: this.buildFiltersAsQueryParams({ filters })
+    let params = this.buildFiltersAsQueryParams({ filters });
+
+    if (skip) {
+      params = params.append('skip', skip);
+    }
+
+    if (sortColumn) {
+      params = params.append('sortColumn', sortColumn);
+    }
+
+    if (sortDirection) {
+      params = params.append('sortDirection', sortDirection);
+    }
+
+    if (take) {
+      params = params.append('take', take);
+    }
+
+    return this.http.get<any>('/api/v1/order', { params }).pipe(
+      map(({ activities, count }) => {
+        for (const activity of activities) {
+          activity.createdAt = parseISO(activity.createdAt);
+          activity.date = parseISO(activity.date);
+        }
+        return { activities, count };
       })
-      .pipe(
-        map(({ activities }) => {
-          for (const activity of activities) {
-            activity.createdAt = parseISO(activity.createdAt);
-            activity.date = parseISO(activity.date);
-          }
-          return { activities };
-        })
-      );
+    );
   }
 
   public fetchDividends({
@@ -203,6 +232,10 @@ export class DataService {
 
   public deleteAccount(aId: string) {
     return this.http.delete<any>(`/api/v1/account/${aId}`);
+  }
+
+  public deleteAccountBalance(aId: string) {
+    return this.http.delete<any>(`/api/v1/account-balance/${aId}`);
   }
 
   public deleteAllOrders() {

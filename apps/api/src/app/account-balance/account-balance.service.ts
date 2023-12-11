@@ -12,6 +12,17 @@ export class AccountBalanceService {
     private readonly prismaService: PrismaService
   ) {}
 
+  public async accountBalance(
+    accountBalanceWhereInput: Prisma.AccountBalanceWhereInput
+  ): Promise<AccountBalance | null> {
+    return this.prismaService.accountBalance.findFirst({
+      include: {
+        Account: true
+      },
+      where: accountBalanceWhereInput
+    });
+  }
+
   public async createAccountBalance(
     data: Prisma.AccountBalanceCreateInput
   ): Promise<AccountBalance> {
@@ -20,12 +31,22 @@ export class AccountBalanceService {
     });
   }
 
+  public async deleteAccountBalance(
+    where: Prisma.AccountBalanceWhereUniqueInput
+  ): Promise<AccountBalance> {
+    return this.prismaService.accountBalance.delete({
+      where
+    });
+  }
+
   public async getAccountBalances({
     filters,
-    user
+    user,
+    withExcludedAccounts
   }: {
     filters?: Filter[];
     user: UserWithSettings;
+    withExcludedAccounts?: boolean;
   }): Promise<AccountBalancesResponse> {
     const where: Prisma.AccountBalanceWhereInput = { userId: user.id };
 
@@ -35,6 +56,10 @@ export class AccountBalanceService {
 
     if (accountFilter) {
       where.accountId = accountFilter.id;
+    }
+
+    if (withExcludedAccounts === false) {
+      where.Account = { isExcluded: false };
     }
 
     const balances = await this.prismaService.accountBalance.findMany({

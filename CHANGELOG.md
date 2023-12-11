@@ -5,7 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 2.27.0 - 2023-11-24
+## Unreleased
+
+### Changed
+
+- Upgraded `prisma` from version `5.6.0` to `5.7.0`
+
+## 2.29.0 - 2023-12-09
+
+### Added
+
+- Introduced a lazy-loaded activities table on the portfolio activities page (experimental)
+
+### Changed
+
+- Set the actions columns of various tables to stick at the end
+- Increased the height of the tabs on mobile
+- Improved the language localization for German (`de`)
+- Improved the language localization for Türkçe (`tr`)
+- Upgraded `marked` from version `4.2.12` to `9.1.6`
+- Upgraded `ngx-markdown` from version `15.1.0` to `17.1.1`
+- Upgraded `ng-extract-i18n-merge` from version `2.8.3` to `2.9.0`
+
+### Fixed
+
+- Fixed an issue in the biometric authentication registration
+
+## 2.28.0 - 2023-12-02
+
+### Added
+
+- Added a historical cash balances table to the account detail dialog
+- Introduced a `HasPermission` annotation for endpoints
+
+### Changed
+
+- Relaxed the check for duplicates in the preview step of the activities import (allow same day)
+- Respected the `withExcludedAccounts` flag in the account balance time series
+
+### Fixed
+
+- Changed the mechanism of the `INTRADAY` data gathering to operate synchronously avoiding database deadlocks
+
+## 2.27.1 - 2023-11-28
+
+### Changed
+
+- Reverted `Nx` from version `17.1.3` to `17.0.2`
+
+## 2.27.0 - 2023-11-26
 
 ### Changed
 
@@ -149,7 +197,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Improved the check for duplicates in the preview step of the activities import (allow different accounts)
+- Relaxed the check for duplicates in the preview step of the activities import (allow different accounts)
 - Improved the usability and validation in the cash balance transfer from one to another account
 - Changed the checkboxes to slide toggles in the overview of the admin control panel
 - Switched from the deprecated (`PUT`) to the new endpoint (`POST`) to manage historical market data in the asset profile details dialog of the admin control panel
