@@ -96,12 +96,17 @@
           [showDetails]="showDetails"
           [unit]="unit"
         ></gf-portfolio-performance>
-        <gf-toggle
-          [defaultValue]="user?.settings?.dateRange"
-          [isLoading]="isLoadingPerformance"
-          [options]="dateRangeOptions"
-          (change)="onChangeDateRange($event.value)"
-        ></gf-toggle>
+        <div
+          *ngIf="showDetails && !user?.settings?.isExperimentalFeatures"
+          class="text-center"
+        >
+          <gf-toggle
+            [defaultValue]="user?.settings?.dateRange"
+            [isLoading]="isLoadingPerformance"
+            [options]="dateRangeOptions"
+            (change)="onChangeDateRange($event.value)"
+          ></gf-toggle>
+        </div>
       </div>
     </div>
   </ng-template>
