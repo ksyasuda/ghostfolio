@@ -7,5 +7,7 @@ export type DateRange =
   | '6m'
   | '1y'
   | '3y'
+  | '5y'
+  | 'wtd'
   | 'max'
   | 'ytd';

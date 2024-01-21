@@ -32,6 +32,8 @@ export class ToggleComponent implements OnChanges, OnInit, AfterViewInit {
     { label: $localize`YTD`, value: 'ytd' },
     { label: $localize`1Y`, value: '1y' },
     { label: $localize`3Y`, value: '3y' },
+    { label: $localize`5Y`, value: '5y' },
+    { label: $localize`WTD`, value: 'wtd' },
     { label: $localize`Max`, value: 'max' }
   ];
 
@@ -41,19 +43,19 @@ export class ToggleComponent implements OnChanges, OnInit, AfterViewInit {
 
   @Output() change = new EventEmitter<Pick<ToggleOption, 'value'>>();
 
-  public option = new FormControl<string>(undefined);
   public deviceType: string;
+  public optionFormControl = new FormControl<string>(undefined);
 
   public constructor() {}
 
   public ngOnInit() {}
 
   public ngOnChanges() {
-    this.option.setValue(this.defaultValue);
+    this.optionFormControl.setValue(this.defaultValue);
   }
 
   public onValueChange() {
-    this.change.emit({ value: this.option.value });
+    this.change.emit({ value: this.optionFormControl.value });
   }
 
   public ngAfterViewInit() {

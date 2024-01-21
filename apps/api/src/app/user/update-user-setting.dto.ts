@@ -4,6 +4,7 @@ import type {
   ViewMode
 } from '@ghostfolio/common/types';
 import {
+  IsArray,
   IsBoolean,
   IsISO8601,
   IsIn,
@@ -38,8 +39,10 @@ export class UpdateUserSettingDto {
     '6m',
     '1y',
     '3y',
+    '5y',
     'max',
-    'ytd'
+    'ytd',
+    'wtd'
   ])
   @IsOptional()
   dateRange?: DateRange;
@@ -47,6 +50,10 @@ export class UpdateUserSettingDto {
   @IsNumber()
   @IsOptional()
   emergencyFund?: number;
+
+  @IsArray()
+  @IsOptional()
+  'filters.tags'?: string[];
 
   @IsBoolean()
   @IsOptional()

@@ -49,7 +49,7 @@ Ghostfolio is for you if you are...
 
 - ✅ Create, update and delete transactions
 - ✅ Multi account management
-- ✅ Portfolio performance for `Today`, `YTD`, `1Y`, `5Y`, `Max`
+- ✅ Portfolio performance: Time-weighted rate of return (TWR) for `Today`, `YTD`, `1Y`, `5Y`, `Max`
 - ✅ Various charts
 - ✅ Static analysis to identify potential risks in your portfolio
 - ✅ Import and export transactions
@@ -87,20 +87,22 @@ We provide official container images hosted on [Docker Hub](https://hub.docker.c
 
 ### Supported Environment Variables
 
-| Name                | Default Value | Description                                                                                                                         |
-| ------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `ACCESS_TOKEN_SALT` |               | A random string used as salt for access tokens                                                                                      |
-| `DATABASE_URL`      |               | The database connection URL, e.g. `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}?sslmode=prefer` |
-| `HOST`              | `0.0.0.0`     | The host where the Ghostfolio application will run on                                                                               |
-| `JWT_SECRET_KEY`    |               | A random string used for _JSON Web Tokens_ (JWT)                                                                                    |
-| `PORT`              | `3333`        | The port where the Ghostfolio application will run on                                                                               |
-| `POSTGRES_DB`       |               | The name of the _PostgreSQL_ database                                                                                               |
-| `POSTGRES_PASSWORD` |               | The password of the _PostgreSQL_ database                                                                                           |
-| `POSTGRES_USER`     |               | The user of the _PostgreSQL_ database                                                                                               |
-| `REDIS_HOST`        |               | The host where _Redis_ is running                                                                                                   |
-| `REDIS_PASSWORD`    |               | The password of _Redis_                                                                                                             |
-| `REDIS_PORT`        |               | The port where _Redis_ is running                                                                                                   |
-| `REQUEST_TIMEOUT`   | `2000`        | The timeout of network requests to data providers in milliseconds                                                                   |
+| Name                     | Default Value | Description                                                                                                                         |
+| ------------------------ | ------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `ACCESS_TOKEN_SALT`      |               | A random string used as salt for access tokens                                                                                      |
+| `API_KEY_COINGECKO_DEMO` |               | The _CoinGecko_ Demo API key                                                                                                        |
+| `API_KEY_COINGECKO_PRO`  |               | The _CoinGecko_ Pro API                                                                                                             |
+| `DATABASE_URL`           |               | The database connection URL, e.g. `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}?sslmode=prefer` |
+| `HOST`                   | `0.0.0.0`     | The host where the Ghostfolio application will run on                                                                               |
+| `JWT_SECRET_KEY`         |               | A random string used for _JSON Web Tokens_ (JWT)                                                                                    |
+| `PORT`                   | `3333`        | The port where the Ghostfolio application will run on                                                                               |
+| `POSTGRES_DB`            |               | The name of the _PostgreSQL_ database                                                                                               |
+| `POSTGRES_PASSWORD`      |               | The password of the _PostgreSQL_ database                                                                                           |
+| `POSTGRES_USER`          |               | The user of the _PostgreSQL_ database                                                                                               |
+| `REDIS_HOST`             |               | The host where _Redis_ is running                                                                                                   |
+| `REDIS_PASSWORD`         |               | The password of _Redis_                                                                                                             |
+| `REDIS_PORT`             |               | The port where _Redis_ is running                                                                                                   |
+| `REQUEST_TIMEOUT`        | `2000`        | The timeout of network requests to data providers in milliseconds                                                                   |
 
 ### Run with Docker Compose
 
@@ -116,7 +118,7 @@ We provide official container images hosted on [Docker Hub](https://hub.docker.c
 Run the following command to start the Docker images from [Docker Hub](https://hub.docker.com/r/ghostfolio/ghostfolio):
 
 ```bash
-docker-compose --env-file ./.env -f docker/docker-compose.yml up -d
+docker compose --env-file ./.env -f docker/docker-compose.yml up -d
 ```
 
 #### b. Build and run environment
@@ -124,8 +126,8 @@ docker-compose --env-file ./.env -f docker/docker-compose.yml up -d
 Run the following commands to build and start the Docker images:
 
 ```bash
-docker-compose --env-file ./.env -f docker/docker-compose.build.yml build
-docker-compose --env-file ./.env -f docker/docker-compose.build.yml up -d
+docker compose --env-file ./.env -f docker/docker-compose.build.yml build
+docker compose --env-file ./.env -f docker/docker-compose.build.yml up -d
 ```
 
 #### Setup
@@ -136,7 +138,7 @@ docker-compose --env-file ./.env -f docker/docker-compose.build.yml up -d
 #### Upgrade Version
 
 1. Increase the version of the `ghostfolio/ghostfolio` Docker image in `docker/docker-compose.yml`
-1. Run the following command to start the new Docker image: `docker-compose --env-file ./.env -f docker/docker-compose.yml up -d`  
+1. Run the following command to start the new Docker image: `docker compose --env-file ./.env -f docker/docker-compose.yml up -d`  
    At each start, the container will automatically apply the database schema migrations if needed.
 
 ### Home Server Systems (Community)
@@ -156,8 +158,9 @@ Ghostfolio is available for various home server systems, including [Runtipi](htt
 ### Setup
 
 1. Run `yarn install`
-1. Run `docker-compose --env-file ./.env -f docker/docker-compose.dev.yml up -d` to start [PostgreSQL](https://www.postgresql.org) and [Redis](https://redis.io)
+1. Run `docker compose --env-file ./.env -f docker/docker-compose.dev.yml up -d` to start [PostgreSQL](https://www.postgresql.org) and [Redis](https://redis.io)
 1. Run `yarn database:setup` to initialize the database schema
+1. Run `git config core.hooksPath ./git-hooks/` to setup git hooks
 1. Start the server and the client (see [_Development_](#Development))
 1. Open http://localhost:4200/en in your browser
 1. Create a new user via _Get Started_ (this first user will get the role `ADMIN`)

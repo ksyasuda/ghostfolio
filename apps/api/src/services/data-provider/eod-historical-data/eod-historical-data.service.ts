@@ -1,13 +1,18 @@
 import { LookupItem } from '@ghostfolio/api/app/symbol/interfaces/lookup-item.interface';
 import { ConfigurationService } from '@ghostfolio/api/services/configuration/configuration.service';
-import { DataProviderInterface } from '@ghostfolio/api/services/data-provider/interfaces/data-provider.interface';
+import {
+  DataProviderInterface,
+  GetDividendsParams,
+  GetHistoricalParams,
+  GetQuotesParams,
+  GetSearchParams
+} from '@ghostfolio/api/services/data-provider/interfaces/data-provider.interface';
 import {
   IDataProviderHistoricalResponse,
   IDataProviderResponse
 } from '@ghostfolio/api/services/interfaces/interfaces';
 import { DEFAULT_CURRENCY } from '@ghostfolio/common/config';
 import { DATE_FORMAT, isCurrency } from '@ghostfolio/common/helper';
-import { Granularity } from '@ghostfolio/common/types';
 import { Injectable, Logger } from '@nestjs/common';
 import {
   AssetClass,
@@ -15,7 +20,6 @@ import {
   DataSource,
   SymbolProfile
 } from '@prisma/client';
-import Big from 'big.js';
 import { format, isToday } from 'date-fns';
 import got from 'got';
 
@@ -50,36 +54,27 @@ export class EodHistoricalDataService implements DataProviderInterface {
     };
   }
 
-  public async getDividends({
-    from,
-    granularity = 'day',
-    symbol,
-    to
-  }: {
-    from: Date;
-    granularity: Granularity;
-    symbol: string;
-    to: Date;
-  }) {
+  public async getDividends({}: GetDividendsParams) {
     return {};
   }
 
-  public async getHistorical(
-    aSymbol: string,
-    aGranularity: Granularity = 'day',
-    from: Date,
-    to: Date
-  ): Promise<{
+  public async getHistorical({
+    from,
+    granularity = 'day',
+    requestTimeout = this.configurationService.get('REQUEST_TIMEOUT'),
+    symbol,
+    to
+  }: GetHistoricalParams): Promise<{
     [symbol: string]: { [date: string]: IDataProviderHistoricalResponse };
   }> {
-    const symbol = this.convertToEodSymbol(aSymbol);
+    symbol = this.convertToEodSymbol(symbol);
 
     try {
       const abortController = new AbortController();
 
       setTimeout(() => {
         abortController.abort();
-      }, this.configurationService.get('REQUEST_TIMEOUT'));
+      }, requestTimeout);
 
       const response = await got(
         `${this.URL}/eod/${symbol}?api_token=${
@@ -87,7 +82,7 @@ export class EodHistoricalDataService implements DataProviderInterface {
         }&fmt=json&from=${format(from, DATE_FORMAT)}&to=${format(
           to,
           DATE_FORMAT
-        )}&period={aGranularity}`,
+        )}&period=${granularity}`,
         {
           // @ts-ignore
           signal: abortController.signal
@@ -97,11 +92,7 @@ export class EodHistoricalDataService implements DataProviderInterface {
       return response.reduce(
         (result, historicalItem, index, array) => {
           result[this.convertFromEodSymbol(symbol)][historicalItem.date] = {
-            marketPrice: this.getConvertedValue({
-              symbol: aSymbol,
-              value: historicalItem.close
-            }),
-            performance: historicalItem.open - historicalItem.close
+            marketPrice: historicalItem.close
           };
 
           return result;
@@ -110,7 +101,7 @@ export class EodHistoricalDataService implements DataProviderInterface {
       );
     } catch (error) {
       throw new Error(
-        `Could not get historical market data for ${aSymbol} (${this.getName()}) from ${format(
+        `Could not get historical market data for ${symbol} (${this.getName()}) from ${format(
           from,
           DATE_FORMAT
         )} to ${format(to, DATE_FORMAT)}: [${error.name}] ${error.message}`
@@ -131,10 +122,7 @@ export class EodHistoricalDataService implements DataProviderInterface {
   public async getQuotes({
     requestTimeout = this.configurationService.get('REQUEST_TIMEOUT'),
     symbols
-  }: {
-    requestTimeout?: number;
-    symbols: string[];
-  }): Promise<{ [symbol: string]: IDataProviderResponse }> {
+  }: GetQuotesParams): Promise<{ [symbol: string]: IDataProviderResponse }> {
     let response: { [symbol: string]: IDataProviderResponse } = {};
 
     if (symbols.length <= 0) {
@@ -204,37 +192,6 @@ export class EodHistoricalDataService implements DataProviderInterface {
         {}
       );
 
-      if (response[`${DEFAULT_CURRENCY}GBP`]) {
-        response[`${DEFAULT_CURRENCY}GBp`] = {
-          ...response[`${DEFAULT_CURRENCY}GBP`],
-          currency: 'GBp',
-          marketPrice: this.getConvertedValue({
-            symbol: `${DEFAULT_CURRENCY}GBp`,
-            value: response[`${DEFAULT_CURRENCY}GBP`].marketPrice
-          })
-        };
-      }
-
-      if (response[`${DEFAULT_CURRENCY}ILS`]) {
-        response[`${DEFAULT_CURRENCY}ILA`] = {
-          ...response[`${DEFAULT_CURRENCY}ILS`],
-          currency: 'ILA',
-          marketPrice: this.getConvertedValue({
-            symbol: `${DEFAULT_CURRENCY}ILA`,
-            value: response[`${DEFAULT_CURRENCY}ILS`].marketPrice
-          })
-        };
-      }
-
-      if (response[`${DEFAULT_CURRENCY}USX`]) {
-        response[`${DEFAULT_CURRENCY}USX`] = {
-          currency: 'USX',
-          dataSource: this.getName(),
-          marketPrice: new Big(1).mul(100).toNumber(),
-          marketState: 'open'
-        };
-      }
-
       return response;
     } catch (error) {
       let message = error;
@@ -256,18 +213,15 @@ export class EodHistoricalDataService implements DataProviderInterface {
   }
 
   public async search({
-    includeIndices = false,
     query
-  }: {
-    includeIndices?: boolean;
-    query: string;
-  }): Promise<{ items: LookupItem[] }> {
+  }: GetSearchParams): Promise<{ items: LookupItem[] }> {
     const searchResult = await this.getSearchResult(query);
 
     return {
       items: searchResult
-        .filter(({ symbol }) => {
-          return !symbol.endsWith('.FOREX');
+        .filter(({ currency, symbol }) => {
+          // Remove 'NA' currency and exchange rates
+          return currency?.length === 3 && !symbol.endsWith('.FOREX');
         })
         .map(
           ({
@@ -335,24 +289,6 @@ export class EodHistoricalDataService implements DataProviderInterface {
     }
 
     return aSymbol;
-  }
-
-  private getConvertedValue({
-    symbol,
-    value
-  }: {
-    symbol: string;
-    value: number;
-  }) {
-    if (symbol === `${DEFAULT_CURRENCY}GBp`) {
-      // Convert GPB to GBp (pence)
-      return new Big(value).mul(100).toNumber();
-    } else if (symbol === `${DEFAULT_CURRENCY}ILA`) {
-      // Convert ILS to ILA
-      return new Big(value).mul(100).toNumber();
-    }
-
-    return value;
   }
 
   private async getSearchResult(aQuery: string): Promise<

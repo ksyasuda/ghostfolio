@@ -12,6 +12,7 @@ import {
   Filter,
   HistoricalDataItem,
   PortfolioInvestments,
+  PortfolioPerformance,
   Position,
   User
 } from '@ghostfolio/common/interfaces';
@@ -45,7 +46,7 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
   public firstOrderDate: Date;
   public hasImpersonationId: boolean;
   public investments: InvestmentItem[];
-  public investmentTimelineDataLabel = $localize`Deposit`;
+  public investmentTimelineDataLabel = $localize`Investment`;
   public investmentsByGroup: InvestmentItem[];
   public isLoadingBenchmarkComparator: boolean;
   public isLoadingInvestmentChart: boolean;
@@ -54,10 +55,11 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
     { label: $localize`Monthly`, value: 'month' },
     { label: $localize`Yearly`, value: 'year' }
   ];
+  public performance: PortfolioPerformance;
   public performanceDataItems: HistoricalDataItem[];
   public performanceDataItemsInPercentage: HistoricalDataItem[];
   public placeholder = '';
-  public portfolioEvolutionDataLabel = $localize`Deposit`;
+  public portfolioEvolutionDataLabel = $localize`Investment`;
   public streaks: PortfolioInvestments['streaks'];
   public positions: Position[];
   public positionsReversed: Position[];
@@ -240,7 +242,10 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
   private fetchDividendsAndInvestments() {
     this.dataService
       .fetchDividends({
-        filters: this.activeFilters,
+        filters:
+          this.activeFilters.length > 0
+            ? this.activeFilters
+            : this.userService.getFilters(),
         groupBy: this.mode,
         range: this.user?.settings?.dateRange
       })
@@ -253,7 +258,10 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
 
     this.dataService
       .fetchInvestments({
-        filters: this.activeFilters,
+        filters:
+          this.activeFilters.length > 0
+            ? this.activeFilters
+            : this.userService.getFilters(),
         groupBy: this.mode,
         range: this.user?.settings?.dateRange
       })
@@ -267,16 +275,16 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
               ? translate('YEAR')
               : translate('YEARS')
             : this.streaks?.currentStreak === 1
-            ? translate('MONTH')
-            : translate('MONTHS');
+              ? translate('MONTH')
+              : translate('MONTHS');
         this.unitLongestStreak =
           this.mode === 'year'
             ? this.streaks?.longestStreak === 1
               ? translate('YEAR')
               : translate('YEARS')
             : this.streaks?.longestStreak === 1
-            ? translate('MONTH')
-            : translate('MONTHS');
+              ? translate('MONTH')
+              : translate('MONTHS');
 
         this.changeDetectorRef.markForCheck();
       });
@@ -338,15 +346,19 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
 
     this.dataService
       .fetchPortfolioPerformance({
-        filters: this.activeFilters,
+        filters:
+          this.activeFilters.length > 0
+            ? this.activeFilters
+            : this.userService.getFilters(),
         range: this.user?.settings?.dateRange
       })
       .pipe(takeUntil(this.unsubscribeSubject))
-      .subscribe(({ chart, firstOrderDate }) => {
+      .subscribe(({ chart, firstOrderDate, performance }) => {
         this.firstOrderDate = firstOrderDate ?? new Date();
         this.daysInMarket = differenceInDays(new Date(), firstOrderDate);
 
         this.investments = [];
+        this.performance = performance;
         this.performanceDataItems = [];
         this.performanceDataItemsInPercentage = [];
 
@@ -383,7 +395,10 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
 
     this.dataService
       .fetchPositions({
-        filters: this.activeFilters,
+        filters:
+          this.activeFilters.length > 0
+            ? this.activeFilters
+            : this.userService.getFilters(),
         range: this.user?.settings?.dateRange
       })
       .pipe(takeUntil(this.unsubscribeSubject))

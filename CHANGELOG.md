@@ -5,6 +5,114 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- Extended the date range support by week to date (`WTD`) and month to date (`MTD`) in the portfolio service
+- Added `healthcheck` for the _Ghostfolio_ service to the `docker-compose` files (`docker-compose.yml` and `docker-compose.build.yml`)
+
+## 2.42.0 - 2024-01-21
+
+### Added
+
+- Added support to edit countries in the asset profile details dialog of the admin control
+- Added support to edit sectors in the asset profile details dialog of the admin control
+
+### Changed
+
+- Improved the handling of derived currencies
+- Improved the labels in the portfolio evolution chart and investment timeline on the analysis page
+- Improved the language localization for German (`de`)
+- Upgraded `prisma` from version `5.7.1` to `5.8.1`
+
+### Fixed
+
+- Fixed an issue in the performance calculation with the currency conversion of fees
+
+## 2.41.0 - 2024-01-16
+
+### Added
+
+- Added the holdings table to the account detail dialog
+- Validated the currency of the search results in the _EOD Historical Data_ service
+
+### Changed
+
+- Increased the timeout to load historical data in the data provider service
+- Improved the asset profile validation for `MANUAL` data source in the activities import
+
+## 2.40.0 - 2024-01-15
+
+### Changed
+
+- Increased the robustness of the exchange rates by always getting quotes in the exchange rate data service
+
+## 2.39.0 - 2024-01-14
+
+### Changed
+
+- Improved the alignment in the portfolio performance chart
+
+### Fixed
+
+- Fixed the currency in the error log of the exchange rate data service
+- Fixed an issue with the currency inconsistency in the _EOD Historical Data_ service (convert from `ZAR` to `ZAc`)
+
+## 2.38.0 - 2024-01-13
+
+### Added
+
+- Broken down the performance into asset and currency on the analysis page (experimental)
+- Added support for international formatted numbers in the scraper configuration
+- Added the attribute `locale` to the scraper configuration to parse the number
+
+### Changed
+
+- Improved the indicator for delayed market data in the client
+- Prepared the portfolio calculation for exchange rate effects
+- Upgraded `prettier` from version `3.1.1` to `3.2.1`
+
+## 2.37.0 - 2024-01-11
+
+### Changed
+
+- Improved the chart size in the asset profile details dialog of the admin control
+- Updated the `docker compose` instructions to _Compose V2_ in the documentation
+
+### Fixed
+
+- Fixed the hidden fifth tab on mobile
+
+## 2.36.0 - 2024-01-07
+
+### Added
+
+- Extended the assistant by a tag selector (experimental)
+- Added support to set a _CoinGecko_ Demo API key via environment variable (`API_KEY_COINGECKO_DEMO`)
+- Added support to set a _CoinGecko_ Pro API key via environment variable (`API_KEY_COINGECKO_PRO`)
+
+### Changed
+
+- Improved the language localization for German (`de`)
+- Removed the `AccountType` enum
+- Refreshed the cryptocurrencies list
+
+## 2.35.0 - 2024-01-06
+
+### Added
+
+- Added support to grant private access
+- Added a hint for _Time-Weighted Rate of Return_ (TWR) to the portfolio summary tab on the home page
+- Added support for REST APIs (`JSON`) via the scraper configuration
+- Enabled the _Redis_ authentication in the `docker-compose` files
+- Set up a git-hook to format the code before any commit
+
+### Changed
+
+- Improved the user interface of the access table to share the portfolio
+- Improved the style of the assistant (experimental)
+
 ## 2.34.0 - 2024-01-02
 
 ### Added
@@ -167,7 +275,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Handled reading items from missing transaction point while getting the position (`getPosition()`) in portfolio service
+- Handled reading items from missing transaction point while getting the position (`getPosition()`) in the portfolio service
 
 ## 2.24.0 - 2023-11-16
 
@@ -2938,7 +3046,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed an issue with the user currency of the public page
-- Fixed an issue of the performance calculation with recent activities in the new calculation engine
+- Fixed an issue in the performance calculation with recent activities in the new calculation engine
 
 ## 1.127.0 - 16.03.2022
 

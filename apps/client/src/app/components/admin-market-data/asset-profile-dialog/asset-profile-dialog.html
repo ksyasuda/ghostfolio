@@ -15,7 +15,7 @@
       [matMenuTriggerFor]="assetProfileActionsMenu"
       (click)="$event.stopPropagation()"
     >
-      <ion-icon name="ellipsis-vertical"></ion-icon>
+      <ion-icon name="ellipsis-vertical" />
     </button>
     <mat-menu #assetProfileActionsMenu="matMenu" xPosition="before">
       <button mat-menu-item type="button" (click)="initialize()">
@@ -261,6 +261,28 @@
             <ng-container i18n>Test</ng-container>
           </button>
         </div>
+      </mat-form-field>
+    </div>
+    <div *ngIf="assetProfile?.dataSource === 'MANUAL'">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label i18n>Sectors</mat-label>
+        <textarea
+          cdkTextareaAutosize
+          formControlName="sectors"
+          matInput
+          type="text"
+        ></textarea>
+      </mat-form-field>
+    </div>
+    <div *ngIf="assetProfile?.dataSource === 'MANUAL'">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label i18n>Countries</mat-label>
+        <textarea
+          cdkTextareaAutosize
+          formControlName="countries"
+          matInput
+          type="text"
+        ></textarea>
       </mat-form-field>
     </div>
     <div>
