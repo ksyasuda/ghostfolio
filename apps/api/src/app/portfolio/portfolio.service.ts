@@ -1681,6 +1681,8 @@ export class PortfolioService {
         portfolioStart = max([
           portfolioStart,
           subMonths(new Date().setHours(0, 0, 0, 0), 6)
+        ]);
+        break;
       case 'mtd':
         portfolioStart = max([
           portfolioStart,

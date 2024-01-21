@@ -10,4 +10,5 @@ export type DateRange =
   | '5y'
   | 'wtd'
   | 'max'
+  | 'mtd'
   | 'ytd';
