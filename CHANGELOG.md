@@ -5,12 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.43.1 - 2024-01-23
 
 ### Added
 
-- Extended the date range support by week to date (`WTD`) and month to date (`MTD`) in the portfolio service
+- Extended the date range support by week to date (`WTD`) and month to date (`MTD`) in the assistant (experimental)
+- Added support for importing dividends from _EOD Historical Data_
 - Added `healthcheck` for the _Ghostfolio_ service to the `docker-compose` files (`docker-compose.yml` and `docker-compose.build.yml`)
+
+### Changed
+
+- Improved the usability of the link to manage the benchmarks in the benchmark comparator with an icon
 
 ## 2.42.0 - 2024-01-21
 
