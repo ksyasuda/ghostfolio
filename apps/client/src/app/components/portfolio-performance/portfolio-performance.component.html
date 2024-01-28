@@ -1,14 +1,12 @@
 <div class="container p-0">
   <div class="no-gutters row">
-    <div
-      class="status-container text-muted text-right"
-      (click)="onShowErrors()"
-    >
+    <div class="status-container text-muted text-right">
       @if (errors?.length > 0 && !isLoading) {
         <ion-icon
           i18n-title
           name="time-outline"
-          title="Oops! Our data provider partner is experiencing the hiccups."
+          title="Oops! A data provider is experiencing the hiccups."
+          (click)="onShowErrors()"
         />
       }
     </div>
@@ -20,7 +18,7 @@
           height: '4rem',
           width: '15rem'
         }"
-      ></ngx-skeleton-loader>
+      />
     </div>
     <div
       class="display-4 font-weight-bold m-0 text-center value-container"
@@ -43,7 +41,7 @@
         [isCurrency]="true"
         [locale]="locale"
         [value]="isLoading ? undefined : performance?.currentNetPerformance"
-      ></gf-value>
+      />
     </div>
     <div class="col">
       <gf-value
@@ -53,7 +51,7 @@
         [value]="
           isLoading ? undefined : performance?.currentNetPerformancePercent
         "
-      ></gf-value>
+      />
     </div>
   </div>
 </div>

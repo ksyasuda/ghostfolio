@@ -5,15 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.46.0 - 2024-01-28
 
 ### Added
 
+- Added a button to reset the active filters in the assistant (experimental)
+
+### Changed
+
+- Migrated the portfolio allocations to work with the filters of the assistant (experimental)
+- Migrated the portfolio holdings to work with the filters of the assistant (experimental)
+
+## 2.45.0 - 2024-01-27
+
+### Added
+
+- Extended the assistant by an account selector (experimental)
+- Added support to grant private access with permissions (experimental)
 - Added `permissions` to the `Access` model
 
 ### Changed
 
+- Migrated the tag selector to a form group in the assistant (experimental)
+- Formatted the name in the _EOD Historical Data_ service
 - Improved the language localization for German (`de`)
+
+### Fixed
+
+- Fixed the import for activities with `MANUAL` data source and type `FEE`, `INTEREST`, `ITEM` or `LIABILITY`
+- Removed holdings with incomplete data from the _Top 3_ and _Bottom 3_ performers on the analysis page
 
 ## 2.44.0 - 2024-01-24
 

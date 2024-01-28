@@ -15,14 +15,14 @@ import {
   ViewChild,
   ViewChildren
 } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { FormBuilder, FormControl } from '@angular/forms';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { AdminService } from '@ghostfolio/client/services/admin.service';
 import { DataService } from '@ghostfolio/client/services/data.service';
-import { User } from '@ghostfolio/common/interfaces';
+import { Filter, User } from '@ghostfolio/common/interfaces';
 import { DateRange } from '@ghostfolio/common/types';
 import { translate } from '@ghostfolio/ui/i18n';
-import { Tag } from '@prisma/client';
+import { Account, Tag } from '@prisma/client';
 import { EMPTY, Observable, Subject, lastValueFrom } from 'rxjs';
 import {
   catchError,
@@ -81,7 +81,7 @@ export class AssistantComponent implements OnChanges, OnDestroy, OnInit {
 
   @Output() closed = new EventEmitter<void>();
   @Output() dateRangeChanged = new EventEmitter<DateRange>();
-  @Output() selectedTagChanged = new EventEmitter<Tag>();
+  @Output() filtersChanged = new EventEmitter<Filter[]>();
 
   @ViewChild('menuTrigger') menuTriggerElement: MatMenuTrigger;
   @ViewChild('search', { static: true }) searchElement: ElementRef;
@@ -91,6 +91,7 @@ export class AssistantComponent implements OnChanges, OnDestroy, OnInit {
 
   public static readonly SEARCH_RESULTS_DEFAULT_LIMIT = 5;
 
+  public accounts: Account[] = [];
   public dateRangeFormControl = new FormControl<string>(undefined);
   public readonly dateRangeOptions = [
     { label: $localize`Today`, value: '1d' },
@@ -110,6 +111,10 @@ export class AssistantComponent implements OnChanges, OnDestroy, OnInit {
     { label: $localize`5Y`, value: '5y' },
     { label: $localize`Max`, value: 'max' }
   ];
+  public filterForm = this.formBuilder.group({
+    account: new FormControl<string>(undefined),
+    tag: new FormControl<string>(undefined)
+  });
   public isLoading = false;
   public isOpen = false;
   public placeholder = $localize`Find holding...`;
@@ -119,7 +124,6 @@ export class AssistantComponent implements OnChanges, OnDestroy, OnInit {
     holdings: []
   };
   public tags: Tag[] = [];
-  public tagsFormControl = new FormControl<string>(undefined);
 
   private keyManager: FocusKeyManager<AssistantListItemComponent>;
   private unsubscribeSubject = new Subject<void>();
@@ -127,18 +131,37 @@ export class AssistantComponent implements OnChanges, OnDestroy, OnInit {
   public constructor(
     private adminService: AdminService,
     private changeDetectorRef: ChangeDetectorRef,
-    private dataService: DataService
+    private dataService: DataService,
+    private formBuilder: FormBuilder
   ) {}
 
   public ngOnInit() {
     const { tags } = this.dataService.fetchInfo();
 
+    this.accounts = this.user?.accounts;
     this.tags = tags.map(({ id, name }) => {
       return {
         id,
         name: translate(name)
       };
     });
+
+    this.filterForm.valueChanges
+      .pipe(takeUntil(this.unsubscribeSubject))
+      .subscribe(({ account, tag }) => {
+        this.filtersChanged.emit([
+          {
+            id: account,
+            type: 'ACCOUNT'
+          },
+          {
+            id: tag,
+            type: 'TAG'
+          }
+        ]);
+
+        this.onCloseAssistant();
+      });
 
     this.searchFormControl.valueChanges
       .pipe(
@@ -181,9 +204,22 @@ export class AssistantComponent implements OnChanges, OnDestroy, OnInit {
 
   public ngOnChanges() {
     this.dateRangeFormControl.setValue(this.user?.settings?.dateRange ?? null);
-    this.tagsFormControl.setValue(
-      this.user?.settings?.['filters.tags']?.[0] ?? null
+
+    this.filterForm.setValue(
+      {
+        account: this.user?.settings?.['filters.accounts']?.[0] ?? null,
+        tag: this.user?.settings?.['filters.tags']?.[0] ?? null
+      },
+      {
+        emitEvent: false
+      }
     );
+  }
+
+  public hasFilter(aFormValue: { [key: string]: string }) {
+    return Object.values(aFormValue).some((value) => {
+      return !!value;
+    });
   }
 
   public async initialize() {
@@ -219,12 +255,17 @@ export class AssistantComponent implements OnChanges, OnDestroy, OnInit {
     this.closed.emit();
   }
 
-  public onTagChange() {
-    const selectedTag = this.tags.find(({ id }) => {
-      return id === this.tagsFormControl.value;
-    });
-
-    this.selectedTagChanged.emit(selectedTag);
+  public onResetFilters() {
+    this.filtersChanged.emit([
+      {
+        id: null,
+        type: 'ACCOUNT'
+      },
+      {
+        id: null,
+        type: 'TAG'
+      }
+    ]);
 
     this.onCloseAssistant();
   }

@@ -105,6 +105,24 @@ export class UserService {
     return usersWithAdminRole.length > 0;
   }
 
+  public hasReadRestrictedAccessPermission({
+    impersonationId,
+    user
+  }: {
+    impersonationId: string;
+    user: UserWithSettings;
+  }) {
+    if (!impersonationId) {
+      return false;
+    }
+
+    const access = user.Access?.find(({ id }) => {
+      return id === impersonationId;
+    });
+
+    return access?.permissions?.includes('READ_RESTRICTED') ?? true;
+  }
+
   public isRestrictedView(aUser: UserWithSettings) {
     return aUser.Settings.settings.isRestrictedView ?? false;
   }
@@ -113,6 +131,7 @@ export class UserService {
     userWhereUniqueInput: Prisma.UserWhereUniqueInput
   ): Promise<UserWithSettings | null> {
     const {
+      Access,
       accessToken,
       Account,
       Analytics,
@@ -127,6 +146,7 @@ export class UserService {
       updatedAt
     } = await this.prismaService.user.findUnique({
       include: {
+        Access: true,
         Account: {
           include: { Platform: true }
         },
@@ -138,6 +158,7 @@ export class UserService {
     });
 
     const user: UserWithSettings = {
+      Access,
       accessToken,
       Account,
       authChallenge,
@@ -198,18 +219,18 @@ export class UserService {
           new Date(),
           user.createdAt
         );
-        let frequency = 15;
+        let frequency = 10;
 
         if (daysSinceRegistration > 365) {
           frequency = 2;
         } else if (daysSinceRegistration > 180) {
           frequency = 3;
         } else if (daysSinceRegistration > 60) {
-          frequency = 5;
+          frequency = 4;
         } else if (daysSinceRegistration > 30) {
-          frequency = 8;
+          frequency = 6;
         } else if (daysSinceRegistration > 15) {
-          frequency = 12;
+          frequency = 8;
         }
 
         if (Analytics?.activityCount % frequency === 1) {

@@ -53,6 +53,10 @@ export class UpdateUserSettingDto {
 
   @IsArray()
   @IsOptional()
+  'filters.accounts'?: string[];
+
+  @IsArray()
+  @IsOptional()
   'filters.tags'?: string[];
 
   @IsBoolean()
