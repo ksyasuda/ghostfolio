@@ -95,14 +95,19 @@ export class AssistantComponent implements OnChanges, OnDestroy, OnInit {
   public dateRangeFormControl = new FormControl<string>(undefined);
   public readonly dateRangeOptions = [
     { label: $localize`Today`, value: '1d' },
+    { label: $localize`5D`, value: '5d' },
+    { label: $localize`1W`, value: '1w' },
     {
       label: $localize`Week to date` + ' (' + $localize`WTD` + ')',
       value: 'wtd'
     },
+    { label: $localize`1M`, value: '1m' },
     {
       label: $localize`Month to date` + ' (' + $localize`MTD` + ')',
       value: 'mtd'
     },
+    { label: $localize`3M`, value: '3m' },
+    { label: $localize`6M`, value: '6m' },
     {
       label: $localize`Year to date` + ' (' + $localize`YTD` + ')',
       value: 'ytd'
