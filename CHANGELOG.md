@@ -5,7 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.48.1 - 2024-02-06
+
+### Fixed
+
+- Added the missing data provider information to the _CoinGecko_ service
+
+## 2.48.0 - 2024-02-05
+
+### Added
+
+- Extended the assistant by an asset class selector (experimental)
+- Added the data provider information to the search endpoint
+
+### Changed
+
+- Improved the usability of the account selector in the assistant (experimental)
+- Improved the usability of the tag selector in the assistant (experimental)
+- Improved the error logs for a timeout in the data provider services
+- Refreshed the cryptocurrencies list
+- Upgraded `prettier` from version `3.2.4` to `3.2.5`
+
+## 2.47.0 - 2024-02-02
 
 ### Changed
 
@@ -15,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed a rendering issue caused by the date range selector in the assistant (experimental)
+- Fixed an issue with the currency conversion in the investment timeline
 - Fixed the export in the lazy-loaded activities table on the portfolio activities page (experimental)
 
 ## 2.46.0 - 2024-01-28

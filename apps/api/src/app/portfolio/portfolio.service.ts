@@ -80,7 +80,7 @@ import {
   subYears,
   subMonths
 } from 'date-fns';
-import { isEmpty, last, sortBy, uniq, uniqBy } from 'lodash';
+import { isEmpty, last, uniq, uniqBy } from 'lodash';
 
 import {
   HistoricalDataContainer,
@@ -294,76 +294,31 @@ export class PortfolioService {
 
     portfolioCalculator.setTransactionPoints(transactionPoints);
 
+    const { items } = await this.getChart({
+      dateRange,
+      impersonationId,
+      portfolioOrders,
+      transactionPoints,
+      userId,
+      userCurrency: this.request.user.Settings.settings.baseCurrency,
+      withDataDecimation: false
+    });
+
     let investments: InvestmentItem[];
 
     if (groupBy) {
-      investments = portfolioCalculator
-        .getInvestmentsByGroup(groupBy)
-        .map((item) => {
-          return {
-            date: item.date,
-            investment: item.investment.toNumber()
-          };
-        });
-
-      // Add investment of current group
-      const dateOfCurrentGroup = format(
-        set(new Date(), {
-          date: 1,
-          month: groupBy === 'year' ? 0 : new Date().getMonth()
-        }),
-        DATE_FORMAT
-      );
-      const investmentOfCurrentGroup = investments.filter(({ date }) => {
-        return date === dateOfCurrentGroup;
+      investments = portfolioCalculator.getInvestmentsByGroup({
+        groupBy,
+        data: items
       });
-
-      if (investmentOfCurrentGroup.length <= 0) {
-        investments.push({
-          date: dateOfCurrentGroup,
-          investment: 0
-        });
-      }
     } else {
-      investments = portfolioCalculator
-        .getInvestments()
-        .map(({ date, investment }) => {
-          return {
-            date,
-            investment: investment.toNumber()
-          };
-        });
-
-      // Add investment of today
-      const investmentOfToday = investments.filter(({ date }) => {
-        return date === format(new Date(), DATE_FORMAT);
+      investments = items.map(({ date, investmentValueWithCurrencyEffect }) => {
+        return {
+          date,
+          investment: investmentValueWithCurrencyEffect
+        };
       });
-
-      if (investmentOfToday.length <= 0) {
-        const pastInvestments = investments.filter(({ date }) => {
-          return isBefore(parseDate(date), new Date());
-        });
-        const lastInvestment = pastInvestments[pastInvestments.length - 1];
-
-        investments.push({
-          date: format(new Date(), DATE_FORMAT),
-          investment: lastInvestment?.investment ?? 0
-        });
-      }
     }
-
-    investments = sortBy(investments, ({ date }) => {
-      return date;
-    });
-
-    const startDate = this.getStartDate(
-      dateRange,
-      parseDate(investments[0]?.date)
-    );
-
-    investments = investments.filter(({ date }) => {
-      return !isBefore(parseDate(date), startDate);
-    });
 
     let streaks: PortfolioInvestments['streaks'];
 
@@ -1450,7 +1405,8 @@ export class PortfolioService {
     portfolioOrders,
     transactionPoints,
     userCurrency,
-    userId
+    userId,
+    withDataDecimation = true
   }: {
     dateRange?: DateRange;
     impersonationId: string;
@@ -1458,6 +1414,7 @@ export class PortfolioService {
     transactionPoints: TransactionPoint[];
     userCurrency: string;
     userId: string;
+    withDataDecimation?: boolean;
   }): Promise<HistoricalDataContainer> {
     if (transactionPoints.length === 0) {
       return {
@@ -1483,16 +1440,18 @@ export class PortfolioService {
     const portfolioStart = parseDate(transactionPoints[0].date);
     const startDate = this.getStartDate(dateRange, portfolioStart);
 
-    const daysInMarket = differenceInDays(new Date(), startDate);
-    const step = Math.round(
-      daysInMarket / Math.min(daysInMarket, MAX_CHART_ITEMS)
-    );
+    let step = 1;
 
-    const items = await portfolioCalculator.getChartData(
-      startDate,
-      endDate,
-      step
-    );
+    if (withDataDecimation) {
+      const daysInMarket = differenceInDays(new Date(), startDate);
+      step = Math.round(daysInMarket / Math.min(daysInMarket, MAX_CHART_ITEMS));
+    }
+
+    const items = await portfolioCalculator.getChartData({
+      step,
+      end: endDate,
+      start: startDate
+    });
 
     return {
       items,

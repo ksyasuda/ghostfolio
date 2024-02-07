@@ -80,7 +80,7 @@ export class CoinGeckoService implements DataProviderInterface {
       let message = error;
 
       if (error?.code === 'ABORT_ERR') {
-        message = `RequestError: The operation was aborted because the request to the data provider took more than ${this.configurationService.get(
+        message = `RequestError: The operation to get the asset profile for ${aSymbol} was aborted because the request to the data provider took more than ${this.configurationService.get(
           'REQUEST_TIMEOUT'
         )}ms`;
       }
@@ -89,6 +89,14 @@ export class CoinGeckoService implements DataProviderInterface {
     }
 
     return response;
+  }
+
+  public getDataProviderInfo(): DataProviderInfo {
+    return {
+      isPremium: false,
+      name: 'CoinGecko',
+      url: 'https://coingecko.com'
+    };
   }
 
   public async getDividends({}: GetDividendsParams) {
@@ -195,7 +203,7 @@ export class CoinGeckoService implements DataProviderInterface {
       let message = error;
 
       if (error?.code === 'ABORT_ERR') {
-        message = `RequestError: The operation was aborted because the request to the data provider took more than ${this.configurationService.get(
+        message = `RequestError: The operation to get the quotes was aborted because the request to the data provider took more than ${this.configurationService.get(
           'REQUEST_TIMEOUT'
         )}ms`;
       }
@@ -235,6 +243,7 @@ export class CoinGeckoService implements DataProviderInterface {
           assetClass: AssetClass.CASH,
           assetSubClass: AssetSubClass.CRYPTOCURRENCY,
           currency: DEFAULT_CURRENCY,
+          dataProviderInfo: this.getDataProviderInfo(),
           dataSource: this.getName()
         };
       });
@@ -242,7 +251,7 @@ export class CoinGeckoService implements DataProviderInterface {
       let message = error;
 
       if (error?.code === 'ABORT_ERR') {
-        message = `RequestError: The operation was aborted because the request to the data provider took more than ${this.configurationService.get(
+        message = `RequestError: The operation to search for ${query} was aborted because the request to the data provider took more than ${this.configurationService.get(
           'REQUEST_TIMEOUT'
         )}ms`;
       }
@@ -251,12 +260,5 @@ export class CoinGeckoService implements DataProviderInterface {
     }
 
     return { items };
-  }
-
-  private getDataProviderInfo(): DataProviderInfo {
-    return {
-      name: 'CoinGecko',
-      url: 'https://coingecko.com'
-    };
   }
 }

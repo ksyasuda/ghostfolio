@@ -57,6 +57,10 @@ export class UpdateUserSettingDto {
 
   @IsArray()
   @IsOptional()
+  'filters.assetClasses'?: string[];
+
+  @IsArray()
+  @IsOptional()
   'filters.tags'?: string[];
 
   @IsBoolean()
