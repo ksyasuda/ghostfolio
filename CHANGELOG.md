@@ -5,6 +5,97 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- Set the parser to `angular` in the `prettier` options
+
+## 2.54.0 - 2024-02-19
+
+### Added
+
+- Added an index for `id` to the account database table
+- Added indexes for `dataSource` and `date` to the market data database table
+- Added an index for `accountId` to the order database table
+
+## 2.53.1 - 2024-02-18
+
+### Added
+
+- Added an accounts tab to the position detail dialog
+- Added `INACTIVE` as a new user role
+
+### Changed
+
+- Improved the usability of the holdings table
+- Refactored the query to filter activities of excluded accounts
+- Eliminated the search request to get quotes in the _EOD Historical Data_ service
+- Improved the language localization for German (`de`)
+- Upgraded `ng-extract-i18n-merge` from version `2.9.1` to `2.10.0`
+
+## 2.52.0 - 2024-02-16
+
+### Added
+
+- Added a loading indicator to the dividend timeline on the analysis page
+- Added a loading indicator to the investment timeline on the analysis page
+- Added support for the cryptocurrency _Jupiter_ (`JUP29210-USD`)
+
+### Changed
+
+- Divided the content of the Frequently Asked Questions (FAQ) page into three sections: _General_, _Cloud (SaaS)_ and _Self-Hosting_
+
+### Fixed
+
+- Fixed an issue with the X-axis scale of the dividend timeline on the analysis page
+- Fixed an issue with the X-axis scale of the investment timeline on the analysis page
+
+## 2.51.0 - 2024-02-12
+
+### Changed
+
+- Improved the ordered list of the _Top 3_ and _Bottom 3_ performers on the analysis page in Safari
+- Replaced `import-sort` with `prettier-plugin-sort-imports`
+- Upgraded `eslint` dependencies
+- Upgraded `Nx` from version `17.2.8` to `18.0.4`
+
+### Fixed
+
+- Fixed the date conversion of the import of historical market data in the admin control panel
+
+## 2.50.0 - 2024-02-11
+
+### Added
+
+- Introduced a setting to disable the data gathering in the admin control
+
+### Changed
+
+- Harmonized the environment variables of various API keys
+- Upgraded `prisma` from version `5.8.1` to `5.9.1`
+
+### Todo
+
+- Rename the environment variable from `ALPHA_VANTAGE_API_KEY` to `API_KEY_ALPHA_VANTAGE`
+- Rename the environment variable from `BETTER_UPTIME_API_KEY` to `API_KEY_BETTER_UPTIME`
+- Rename the environment variable from `EOD_HISTORICAL_DATA_API_KEY` to `API_KEY_EOD_HISTORICAL_DATA`
+- Rename the environment variable from `FINANCIAL_MODELING_PREP_API_KEY` to `API_KEY_FINANCIAL_MODELING_PREP`
+- Rename the environment variable from `OPEN_FIGI_API_KEY` to `API_KEY_OPEN_FIGI`
+- Rename the environment variable from `RAPID_API_API_KEY` to `API_KEY_RAPID_API`
+
+## 2.49.0 - 2024-02-09
+
+### Added
+
+- Added a button to apply the active filters in the assistant
+
+### Changed
+
+- Moved the assistant from experimental to general availability
+- Improved the usability by reloading the content with a logo click on the home page
+- Upgraded `yahoo-finance2` from version `2.9.0` to `2.9.1`
+
 ## 2.48.1 - 2024-02-06
 
 ### Fixed

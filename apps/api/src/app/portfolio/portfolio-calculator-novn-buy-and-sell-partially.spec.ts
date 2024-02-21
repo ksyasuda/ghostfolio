@@ -1,6 +1,7 @@
 import { CurrentRateService } from '@ghostfolio/api/app/portfolio/current-rate.service';
 import { ExchangeRateDataService } from '@ghostfolio/api/services/exchange-rate-data/exchange-rate-data.service';
 import { parseDate } from '@ghostfolio/common/helper';
+
 import Big from 'big.js';
 
 import { CurrentRateServiceMock } from './current-rate.service.mock';
@@ -20,7 +21,7 @@ describe('PortfolioCalculator', () => {
   let exchangeRateDataService: ExchangeRateDataService;
 
   beforeEach(() => {
-    currentRateService = new CurrentRateService(null, null);
+    currentRateService = new CurrentRateService(null, null, null);
 
     exchangeRateDataService = new ExchangeRateDataService(
       null,

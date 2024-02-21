@@ -22,6 +22,7 @@ import {
   DataProviderInfo,
   ScraperConfiguration
 } from '@ghostfolio/common/interfaces';
+
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource, SymbolProfile } from '@prisma/client';
 import * as cheerio from 'cheerio';
@@ -42,16 +43,18 @@ export class ManualService implements DataProviderInterface {
     return true;
   }
 
-  public async getAssetProfile(
-    aSymbol: string
-  ): Promise<Partial<SymbolProfile>> {
+  public async getAssetProfile({
+    symbol
+  }: {
+    symbol: string;
+  }): Promise<Partial<SymbolProfile>> {
     const assetProfile: Partial<SymbolProfile> = {
-      dataSource: this.getName(),
-      symbol: aSymbol
+      symbol,
+      dataSource: this.getName()
     };
 
     const [symbolProfile] = await this.symbolProfileService.getSymbolProfiles([
-      { dataSource: this.getName(), symbol: aSymbol }
+      { symbol, dataSource: this.getName() }
     ]);
 
     if (symbolProfile) {

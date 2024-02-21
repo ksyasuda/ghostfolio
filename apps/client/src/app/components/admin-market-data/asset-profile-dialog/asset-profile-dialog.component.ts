@@ -1,3 +1,14 @@
+import { UpdateAssetProfileDto } from '@ghostfolio/api/app/admin/update-asset-profile.dto';
+import { AdminService } from '@ghostfolio/client/services/admin.service';
+import { DataService } from '@ghostfolio/client/services/data.service';
+import { DATE_FORMAT, parseDate } from '@ghostfolio/common/helper';
+import {
+  AdminMarketDataDetails,
+  Currency,
+  UniqueAsset
+} from '@ghostfolio/common/interfaces';
+import { translate } from '@ghostfolio/ui/i18n';
+
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -9,16 +20,6 @@ import {
 import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { UpdateAssetProfileDto } from '@ghostfolio/api/app/admin/update-asset-profile.dto';
-import { AdminService } from '@ghostfolio/client/services/admin.service';
-import { DataService } from '@ghostfolio/client/services/data.service';
-import { DATE_FORMAT, parseDate } from '@ghostfolio/common/helper';
-import {
-  AdminMarketDataDetails,
-  Currency,
-  UniqueAsset
-} from '@ghostfolio/common/interfaces';
-import { translate } from '@ghostfolio/ui/i18n';
 import {
   AssetClass,
   AssetSubClass,
@@ -90,7 +91,7 @@ export class AssetProfileDialog implements OnDestroy, OnInit {
     private snackBar: MatSnackBar
   ) {}
 
-  public ngOnInit(): void {
+  public ngOnInit() {
     const { benchmarks, currencies } = this.dataService.fetchInfo();
 
     this.benchmarks = benchmarks;
@@ -166,7 +167,7 @@ export class AssetProfileDialog implements OnDestroy, OnInit {
       });
   }
 
-  public onClose(): void {
+  public onClose() {
     this.dialogRef.close();
   }
 

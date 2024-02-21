@@ -25,6 +25,7 @@ import type {
   MarketDataPreset,
   RequestWithUser
 } from '@ghostfolio/common/types';
+
 import {
   Body,
   Controller,
@@ -255,7 +256,7 @@ export class AdminController {
         dataSource,
         marketPrice,
         symbol,
-        date: resetHours(parseISO(date)),
+        date: parseISO(date),
         state: 'CLOSE'
       })
     );

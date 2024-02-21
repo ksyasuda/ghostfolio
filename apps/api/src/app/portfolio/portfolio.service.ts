@@ -48,6 +48,7 @@ import type {
   RequestWithUser,
   UserWithSettings
 } from '@ghostfolio/common/types';
+
 import { Inject, Injectable } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import {
@@ -421,7 +422,7 @@ export class PortfolioService {
     );
 
     const [dataProviderResponses, symbolProfiles] = await Promise.all([
-      this.dataProviderService.getQuotes({ items: dataGatheringItems }),
+      this.dataProviderService.getQuotes({ user, items: dataGatheringItems }),
       this.symbolProfileService.getSymbolProfiles(dataGatheringItems)
     ]);
 
@@ -658,6 +659,7 @@ export class PortfolioService {
     if (orders.length <= 0) {
       return {
         tags,
+        accounts: [],
         averagePrice: undefined,
         dataProviderInfo: undefined,
         dividendInBaseCurrency: undefined,
@@ -739,6 +741,13 @@ export class PortfolioService {
         transactionCount
       } = position;
 
+      const accounts: PortfolioPositionDetail['accounts'] = uniqBy(
+        orders,
+        'Account.id'
+      ).map(({ Account }) => {
+        return Account;
+      });
+
       const dividendInBaseCurrency = getSum(
         orders
           .filter(({ type }) => {
@@ -812,6 +821,7 @@ export class PortfolioService {
       }
 
       return {
+        accounts,
         firstBuyDate,
         marketPrice,
         maxPrice,
@@ -852,6 +862,7 @@ export class PortfolioService {
       };
     } else {
       const currentData = await this.dataProviderService.getQuotes({
+        user,
         items: [{ dataSource: DataSource.YAHOO, symbol: aSymbol }]
       });
       const marketPrice = currentData[aSymbol]?.marketPrice;
@@ -894,6 +905,7 @@ export class PortfolioService {
         orders,
         SymbolProfile,
         tags,
+        accounts: [],
         averagePrice: 0,
         dataProviderInfo: undefined,
         dividendInBaseCurrency: 0,
@@ -929,6 +941,7 @@ export class PortfolioService {
       return type === 'SEARCH_QUERY';
     })?.id;
     const userId = await this.getUserId(impersonationId, this.request.user.id);
+    const user = await this.userService.user({ id: userId });
 
     const { portfolioOrders, transactionPoints } =
       await this.getTransactionPoints({
@@ -970,7 +983,7 @@ export class PortfolioService {
     });
 
     const [dataProviderResponses, symbolProfiles] = await Promise.all([
-      this.dataProviderService.getQuotes({ items: dataGatheringItems }),
+      this.dataProviderService.getQuotes({ user, items: dataGatheringItems }),
       this.symbolProfileService.getSymbolProfiles(
         positions.map(({ dataSource, symbol }) => {
           return { dataSource, symbol };

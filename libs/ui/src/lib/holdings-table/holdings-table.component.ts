@@ -1,3 +1,5 @@
+import { PortfolioPosition, UniqueAsset } from '@ghostfolio/common/interfaces';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,7 +13,6 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { Router } from '@angular/router';
-import { PortfolioPosition, UniqueAsset } from '@ghostfolio/common/interfaces';
 import { AssetClass } from '@prisma/client';
 import { Subject, Subscription } from 'rxjs';
 
@@ -25,6 +26,7 @@ export class HoldingsTableComponent implements OnChanges, OnDestroy, OnInit {
   @Input() baseCurrency: string;
   @Input() deviceType: string;
   @Input() hasPermissionToCreateActivity: boolean;
+  @Input() hasPermissionToOpenDetails = true;
   @Input() hasPermissionToShowValues = true;
   @Input() holdings: PortfolioPosition[];
   @Input() locale: string;
@@ -67,10 +69,12 @@ export class HoldingsTableComponent implements OnChanges, OnDestroy, OnInit {
     }
   }
 
-  public onOpenPositionDialog({ dataSource, symbol }: UniqueAsset): void {
-    this.router.navigate([], {
-      queryParams: { dataSource, symbol, positionDetailDialog: true }
-    });
+  public onOpenPositionDialog({ dataSource, symbol }: UniqueAsset) {
+    if (this.hasPermissionToOpenDetails) {
+      this.router.navigate([], {
+        queryParams: { dataSource, symbol, positionDetailDialog: true }
+      });
+    }
   }
 
   public onShowAllPositions() {

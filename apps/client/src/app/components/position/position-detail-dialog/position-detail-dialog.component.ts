@@ -1,14 +1,3 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  Inject,
-  OnDestroy,
-  OnInit
-} from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Sort, SortDirection } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
 import { DataService } from '@ghostfolio/client/services/data.service';
 import { UserService } from '@ghostfolio/client/services/user/user.service';
 import { DATE_FORMAT, downloadAsFile } from '@ghostfolio/common/helper';
@@ -20,7 +9,19 @@ import {
 } from '@ghostfolio/common/interfaces';
 import { OrderWithAccount } from '@ghostfolio/common/types';
 import { translate } from '@ghostfolio/ui/i18n';
-import { Tag } from '@prisma/client';
+
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  Inject,
+  OnDestroy,
+  OnInit
+} from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { SortDirection } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
+import { Account, Tag } from '@prisma/client';
 import { format, isSameMonth, isToday, parseISO } from 'date-fns';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -35,6 +36,7 @@ import { PositionDetailDialogParams } from './interfaces/interfaces';
   styleUrls: ['./position-detail-dialog.component.scss']
 })
 export class PositionDetailDialog implements OnDestroy, OnInit {
+  public accounts: Account[];
   public activities: OrderWithAccount[];
   public assetClass: string;
   public assetSubClass: string;
@@ -82,7 +84,7 @@ export class PositionDetailDialog implements OnDestroy, OnInit {
     private userService: UserService
   ) {}
 
-  public ngOnInit(): void {
+  public ngOnInit() {
     this.dataService
       .fetchPositionDetail({
         dataSource: this.data.dataSource,
@@ -91,6 +93,7 @@ export class PositionDetailDialog implements OnDestroy, OnInit {
       .pipe(takeUntil(this.unsubscribeSubject))
       .subscribe(
         ({
+          accounts,
           averagePrice,
           dataProviderInfo,
           dividendInBaseCurrency,
@@ -112,6 +115,7 @@ export class PositionDetailDialog implements OnDestroy, OnInit {
           transactionCount,
           value
         }) => {
+          this.accounts = accounts;
           this.activities = orders;
           this.averagePrice = averagePrice;
           this.benchmarkDataItems = [];
@@ -263,22 +267,14 @@ export class PositionDetailDialog implements OnDestroy, OnInit {
       });
   }
 
-  public onClose(): void {
+  public onClose() {
     this.dialogRef.close();
   }
 
   public onExport() {
-    let activityIds = [];
-
-    if (this.user?.settings?.isExperimentalFeatures === true) {
-      activityIds = this.dataSource.data.map(({ id }) => {
-        return id;
-      });
-    } else {
-      activityIds = this.activities.map(({ id }) => {
-        return id;
-      });
-    }
+    let activityIds = this.dataSource.data.map(({ id }) => {
+      return id;
+    });
 
     this.dataService
       .fetchExport({ activityIds })

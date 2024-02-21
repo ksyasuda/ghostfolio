@@ -1,3 +1,5 @@
+import { ToggleOption } from '@ghostfolio/common/types';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,7 +13,6 @@ import {
   ElementRef
 } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { ToggleOption } from '@ghostfolio/common/types';
 
 @Component({
   selector: 'gf-toggle',
