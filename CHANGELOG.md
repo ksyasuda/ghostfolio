@@ -5,15 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.57.0 - 2024-02-25
+
+### Changed
+
+- Moved the break down of the performance into asset and currency on the analysis page from experimental to general availability
+- Restructured the `copy-assets` `Nx` target
+
+### Fixed
+
+- Changed the performances of the _Top 3_ and _Bottom 3_ performers on the analysis page to take the currency effects into account
+
+## 2.56.0 - 2024-02-24
+
+### Changed
+
+- Switched the performance calculations to take the currency effects into account
+- Removed the `isDefault` flag from the `Account` database schema
+- Exposed the database index of _Redis_ as an environment variable (`REDIS_DB`)
+- Improved the language localization for German (`de`)
+- Upgraded `prisma` from version `5.9.1` to `5.10.2`
+
+### Fixed
+
+- Added the missing default currency to the prepare currencies function in the exchange rate data service
+
 ## 2.55.0 - 2024-02-22
 
 ### Added
 
 - Added indexes for `alias`, `granteeUserId` and `userId` to the access database table
 - Added indexes for `currency`, `name` and `userId` to the account database table
-- Added an index for `accountId`, `date` and `updatedAt` to the account balance database table
+- Added indexes for `accountId`, `date` and `updatedAt` to the account balance database table
 - Added an index for `userId` to the auth device database table
-- Added an index for `marketPrice` and `state` to the market data database table
+- Added indexes for `marketPrice` and `state` to the market data database table
 - Added indexes for `date`, `isDraft` and `userId` to the order database table
 - Added an index for `name` to the platform database table
 - Added indexes for `assetClass`, `currency`, `dataSource`, `isin`, `name` and `symbol` to the symbol profile database table

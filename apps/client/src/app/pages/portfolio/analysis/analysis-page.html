@@ -18,136 +18,147 @@
     </div>
   </div>
 
-  @if (user?.settings?.isExperimentalFeatures) {
-    <div class="mb-5 row">
-      <div class="col">
-        <mat-card appearance="outlined" class="mb-3">
-          <mat-card-content>
-            <div class="d-flex py-1">
-              <div class="flex-grow-1 mr-2 text-truncate" i18n>
-                Absolute Asset Performance
-              </div>
-              <div class="d-flex justify-content-end">
-                <gf-value
-                  class="justify-content-end"
-                  position="end"
-                  [isCurrency]="true"
-                  [locale]="user?.settings?.locale"
-                  [unit]="user?.settings?.baseCurrency"
-                  [value]="
-                    isLoadingInvestmentChart
-                      ? undefined
-                      : performance?.currentNetPerformance
-                  "
-                />
-              </div>
+  <div class="mb-5 row">
+    <div class="col">
+      <mat-card appearance="outlined" class="mb-3">
+        <mat-card-content>
+          <div class="d-flex py-1">
+            <div
+              class="align-items-center d-flex flex-grow-1 mr-2 text-truncate"
+            >
+              <span i18n>Absolute Asset Performance</span>
+              <gf-premium-indicator
+                *ngIf="user?.subscription?.type === 'Basic'"
+                class="ml-1"
+              />
             </div>
-            <div class="d-flex mb-3 ml-3 py-1">
-              <div class="flex-grow-1 mr-2 text-truncate" i18n>
-                Asset Performance
-              </div>
-              <div class="d-flex justify-content-end">
-                <gf-value
-                  class="justify-content-end"
-                  position="end"
-                  [colorizeSign]="true"
-                  [isPercent]="true"
-                  [locale]="user?.settings?.locale"
-                  [value]="
-                    isLoadingInvestmentChart
-                      ? undefined
-                      : performance?.currentNetPerformancePercent
-                  "
-                />
-              </div>
+            <div class="d-flex justify-content-end">
+              <gf-value
+                class="justify-content-end"
+                position="end"
+                [isCurrency]="true"
+                [locale]="user?.settings?.locale"
+                [unit]="user?.settings?.baseCurrency"
+                [value]="
+                  isLoadingInvestmentChart
+                    ? undefined
+                    : performance?.currentNetPerformance
+                "
+              />
             </div>
-            <div class="d-flex py-1">
-              <div class="flex-grow-1 mr-2 text-truncate" i18n>
-                Absolute Currency Performance
-              </div>
-              <div class="d-flex justify-content-end">
-                <gf-value
-                  class="justify-content-end"
-                  position="end"
-                  [isCurrency]="true"
-                  [locale]="user?.settings?.locale"
-                  [unit]="user?.settings?.baseCurrency"
-                  [value]="
-                    isLoadingInvestmentChart
-                      ? undefined
-                      : performance?.currentNetPerformanceWithCurrencyEffect ===
-                          null
-                        ? null
-                        : performance?.currentNetPerformanceWithCurrencyEffect -
-                          performance?.currentNetPerformance
-                  "
-                />
-              </div>
+          </div>
+          <div class="d-flex mb-3 ml-3 py-1">
+            <div class="flex-grow-1 mr-2 text-truncate" i18n>
+              Asset Performance
             </div>
-            <div class="d-flex ml-3 py-1">
-              <div class="flex-grow-1 mr-2 text-truncate" i18n>
-                Currency Performance
-              </div>
-              <div class="d-flex justify-content-end">
-                <gf-value
-                  class="justify-content-end"
-                  position="end"
-                  [colorizeSign]="true"
-                  [isPercent]="true"
-                  [locale]="user?.settings?.locale"
-                  [value]="
-                    isLoadingInvestmentChart
-                      ? undefined
+            <div class="d-flex justify-content-end">
+              <gf-value
+                class="justify-content-end"
+                position="end"
+                [colorizeSign]="true"
+                [isPercent]="true"
+                [locale]="user?.settings?.locale"
+                [value]="
+                  isLoadingInvestmentChart
+                    ? undefined
+                    : performance?.currentNetPerformancePercent
+                "
+              />
+            </div>
+          </div>
+          <div class="d-flex py-1">
+            <div
+              class="align-items-center d-flex flex-grow-1 mr-2 text-truncate"
+            >
+              <span i18n>Absolute Currency Performance</span>
+              <gf-premium-indicator
+                *ngIf="user?.subscription?.type === 'Basic'"
+                class="ml-1"
+              />
+            </div>
+            <div class="d-flex justify-content-end">
+              <gf-value
+                class="justify-content-end"
+                position="end"
+                [isCurrency]="true"
+                [locale]="user?.settings?.locale"
+                [unit]="user?.settings?.baseCurrency"
+                [value]="
+                  isLoadingInvestmentChart
+                    ? undefined
+                    : performance?.currentNetPerformance === null
+                      ? null
+                      : performance?.currentNetPerformanceWithCurrencyEffect -
+                        performance?.currentNetPerformance
+                "
+              />
+            </div>
+          </div>
+          <div class="d-flex ml-3 py-1">
+            <div class="flex-grow-1 mr-2 text-truncate" i18n>
+              Currency Performance
+            </div>
+            <div class="d-flex justify-content-end">
+              <gf-value
+                class="justify-content-end"
+                position="end"
+                [colorizeSign]="true"
+                [isPercent]="true"
+                [locale]="user?.settings?.locale"
+                [value]="
+                  isLoadingInvestmentChart
+                    ? undefined
+                    : performance?.currentNetPerformancePercent === null
+                      ? null
                       : performance?.currentNetPerformancePercentWithCurrencyEffect -
                         performance?.currentNetPerformancePercent
-                  "
-                />
-              </div>
+                "
+              />
             </div>
-            <div><hr /></div>
-            <div class="d-flex py-1">
-              <div class="flex-grow-1 mr-2 text-truncate" i18n>
-                Absolute Net Performance
-              </div>
-              <div class="d-flex justify-content-end">
-                <gf-value
-                  class="justify-content-end"
-                  position="end"
-                  [isCurrency]="true"
-                  [locale]="user?.settings?.locale"
-                  [unit]="user?.settings?.baseCurrency"
-                  [value]="
-                    isLoadingInvestmentChart
-                      ? undefined
-                      : performance?.currentNetPerformanceWithCurrencyEffect
-                  "
-                />
-              </div>
+          </div>
+          <div><hr /></div>
+          <div class="d-flex py-1">
+            <div class="flex-grow-1 mr-2 text-truncate" i18n>
+              Absolute Net Performance
             </div>
-            <div class="d-flex ml-3 py-1">
-              <div class="flex-grow-1 mr-2 text-truncate" i18n>
-                Net Performance
-              </div>
-              <div class="d-flex justify-content-end">
-                <gf-value
-                  class="justify-content-end"
-                  position="end"
-                  [colorizeSign]="true"
-                  [isPercent]="true"
-                  [locale]="user?.settings?.locale"
-                  [value]="
-                    isLoadingInvestmentChart
-                      ? undefined
-                      : performance?.currentNetPerformancePercentWithCurrencyEffect
-                  "
-                />
-              </div>
+            <div class="d-flex justify-content-end">
+              <gf-value
+                class="justify-content-end"
+                position="end"
+                [isCurrency]="true"
+                [locale]="user?.settings?.locale"
+                [unit]="user?.settings?.baseCurrency"
+                [value]="
+                  isLoadingInvestmentChart
+                    ? undefined
+                    : performance?.currentNetPerformanceWithCurrencyEffect
+                "
+              />
             </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
+          </div>
+          <div class="d-flex ml-3 py-1">
+            <div class="flex-grow-1 mr-2 text-truncate" i18n>
+              Net Performance
+            </div>
+            <div class="d-flex justify-content-end">
+              <gf-value
+                class="justify-content-end"
+                position="end"
+                [colorizeSign]="true"
+                [isPercent]="true"
+                [locale]="user?.settings?.locale"
+                [value]="
+                  isLoadingInvestmentChart
+                    ? undefined
+                    : performance?.currentNetPerformancePercentWithCurrencyEffect
+                "
+              />
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
     </div>
-  }
+  </div>
 
   <div class="mb-5 row">
     <div class="col-md-6">
@@ -174,14 +185,16 @@
                 [routerLink]="[]"
               >
                 <div class="flex-grow-1 mr-2 text-truncate">
-                  {{ (pageIndexTop * pageSize) + i + 1 }}. {{ position.name }}
+                  <!-- {{ (pageIndexTop * pageSize) + i + 1 }}. {{ position.name }} -->
                   <gf-value
                     class="justify-content-end"
                     position="end"
                     [colorizeSign]="true"
                     [isPercent]="true"
                     [locale]="user?.settings?.locale"
-                    [value]="position.netPerformancePercentage"
+                    [value]="
+                      position.netPerformancePercentageWithCurrencyEffect
+                    "
                   >
                   </gf-value>
                 </div>
@@ -229,6 +242,7 @@
           >
         </mat-card-header>
         <mat-card-content>
+<<<<<<< HEAD
         <ol class="mb-0 ml-1 pl-3">
           <li
             *ngFor="let position of (showAllBottom ? positionsReversed.slice(pageIndexBottom * pageSize, (pageIndexBottom + 1) * pageSize) : positionsReversed | slice:0:5); let i = index"
@@ -244,7 +258,7 @@
               [routerLink]="[]"
             >
               <div class="flex-grow-1 mr-2 text-truncate">
-                {{ (pageIndexBottom * pageSize) + i + 1 }}. {{ position.name }}
+                <!-- {{ (pageIndexBottom * pageSize) + i + 1 }}. {{ position.name }} -->
               </div>
               <div class="d-flex justify-content-end">
                 <gf-value
@@ -259,6 +273,35 @@
             </a>
           </li>
         </ol>
+=======
+          <ol class="mb-0 ml-1 pl-3">
+            <li *ngFor="let position of bottom3" class="py-1">
+              <a
+                class="d-flex"
+                [queryParams]="{
+                  dataSource: position.dataSource,
+                  positionDetailDialog: true,
+                  symbol: position.symbol
+                }"
+                [routerLink]="[]"
+              >
+                <div class="flex-grow-1 mr-2">{{ position.name }}</div>
+                <div class="d-flex justify-content-end">
+                  <gf-value
+                    class="justify-content-end"
+                    position="end"
+                    [colorizeSign]="true"
+                    [isPercent]="true"
+                    [locale]="user?.settings?.locale"
+                    [value]="
+                      position.netPerformancePercentageWithCurrencyEffect
+                    "
+                  />
+                </div>
+              </a>
+            </li>
+          </ol>
+>>>>>>> upstream/main
           <div>
             <ngx-skeleton-loader
               *ngIf="!positionsReversed"
