@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.59.0 - 2024-02-29
+
+### Added
+
+- Added an index for `isExcluded` to the account database table
+- Extended the content of the _Self-Hosting_ section on the Frequently Asked Questions (FAQ) page
+
+### Changed
+
+- Improved the activities import by `isin` in the _Yahoo Finance_ service
+
+### Fixed
+
+- Fixed an issue with the exchange rate calculation of (wealth) items in accounts
+
+## 2.58.0 - 2024-02-27
+
+### Changed
+
+- Improved the handling of activities without account
+
+### Fixed
+
+- Fixed the query to filter activities of excluded accounts
+- Improved the asset profile validation in the activities import
+
 ## 2.57.0 - 2024-02-25
 
 ### Changed
