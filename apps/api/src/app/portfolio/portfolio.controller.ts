@@ -1,4 +1,5 @@
 import { AccessService } from '@ghostfolio/api/app/access/access.service';
+import { OrderService } from '@ghostfolio/api/app/order/order.service';
 import { UserService } from '@ghostfolio/api/app/user/user.service';
 import { HasPermissionGuard } from '@ghostfolio/api/guards/has-permission.guard';
 import {
@@ -11,6 +12,7 @@ import { TransformDataSourceInResponseInterceptor } from '@ghostfolio/api/interc
 import { ApiService } from '@ghostfolio/api/services/api/api.service';
 import { ConfigurationService } from '@ghostfolio/api/services/configuration/configuration.service';
 import { ExchangeRateDataService } from '@ghostfolio/api/services/exchange-rate-data/exchange-rate-data.service';
+import { ImpersonationService } from '@ghostfolio/api/services/impersonation/impersonation.service';
 import {
   DEFAULT_CURRENCY,
   HEADER_KEY_IMPERSONATION
@@ -18,6 +20,7 @@ import {
 import {
   PortfolioDetails,
   PortfolioDividends,
+  PortfolioHoldingsResponse,
   PortfolioInvestments,
   PortfolioPerformanceResponse,
   PortfolioPublicDetails,
@@ -57,6 +60,8 @@ export class PortfolioController {
     private readonly apiService: ApiService,
     private readonly configurationService: ConfigurationService,
     private readonly exchangeRateDataService: ExchangeRateDataService,
+    private readonly impersonationService: ImpersonationService,
+    private readonly orderService: OrderService,
     private readonly portfolioService: PortfolioService,
     @Inject(REQUEST) private readonly request: RequestWithUser,
     private readonly userService: UserService
@@ -91,21 +96,15 @@ export class PortfolioController {
       filterByTags
     });
 
-    const {
-      accounts,
-      filteredValueInBaseCurrency,
-      filteredValueInPercentage,
-      hasErrors,
-      holdings,
-      platforms,
-      summary,
-      totalValueInBaseCurrency
-    } = await this.portfolioService.getDetails({
-      dateRange,
-      filters,
-      impersonationId,
-      userId: this.request.user.id
-    });
+    const { accounts, hasErrors, holdings, platforms, summary } =
+      await this.portfolioService.getDetails({
+        dateRange,
+        filters,
+        impersonationId,
+        userId: this.request.user.id,
+        withLiabilities: true,
+        withSummary: true
+      });
 
     if (hasErrors || hasNotDefinedValuesInObject(holdings)) {
       hasError = true;
@@ -160,19 +159,21 @@ export class PortfolioController {
         'currentGrossPerformanceWithCurrencyEffect',
         'currentNetPerformance',
         'currentNetPerformanceWithCurrencyEffect',
+        'currentNetWorth',
         'currentValue',
-        'dividend',
+        'dividendInBaseCurrency',
         'emergencyFund',
         'excludedAccountsAndActivities',
         'fees',
+        'filteredValueInBaseCurrency',
         'fireWealth',
         'interest',
         'items',
         'liabilities',
-        'netWorth',
         'totalBuy',
         'totalInvestment',
-        'totalSell'
+        'totalSell',
+        'totalValueInBaseCurrency'
       ]);
     }
 
@@ -199,12 +200,9 @@ export class PortfolioController {
 
     return {
       accounts,
-      filteredValueInBaseCurrency,
-      filteredValueInPercentage,
       hasError,
       holdings,
       platforms,
-      totalValueInBaseCurrency,
       summary: portfolioSummary
     };
   }
@@ -231,11 +229,21 @@ export class PortfolioController {
       filterByTags
     });
 
-    let dividends = await this.portfolioService.getDividends({
-      dateRange,
+    const impersonationUserId =
+      await this.impersonationService.validateImpersonationId(impersonationId);
+    const userCurrency = this.request.user.Settings.settings.baseCurrency;
+
+    const { activities } = await this.orderService.getOrders({
       filters,
-      groupBy,
-      impersonationId
+      userCurrency,
+      userId: impersonationUserId || this.request.user.id,
+      types: ['DIVIDEND']
+    });
+
+    let dividends = await this.portfolioService.getDividends({
+      activities,
+      dateRange,
+      groupBy
     });
 
     if (
@@ -263,6 +271,33 @@ export class PortfolioController {
     }
 
     return { dividends };
+  }
+
+  @Get('holdings')
+  @UseGuards(AuthGuard('jwt'), HasPermissionGuard)
+  @UseInterceptors(RedactValuesInResponseInterceptor)
+  @UseInterceptors(TransformDataSourceInResponseInterceptor)
+  public async getHoldings(
+    @Headers(HEADER_KEY_IMPERSONATION.toLowerCase()) impersonationId: string,
+    @Query('accounts') filterByAccounts?: string,
+    @Query('assetClasses') filterByAssetClasses?: string,
+    @Query('query') filterBySearchQuery?: string,
+    @Query('tags') filterByTags?: string
+  ): Promise<PortfolioHoldingsResponse> {
+    const filters = this.apiService.buildFiltersFromQueryParams({
+      filterByAccounts,
+      filterByAssetClasses,
+      filterBySearchQuery,
+      filterByTags
+    });
+
+    const { holdings } = await this.portfolioService.getDetails({
+      filters,
+      impersonationId,
+      userId: this.request.user.id
+    });
+
+    return { holdings: Object.values(holdings) };
   }
 
   @Get('investments')
@@ -488,7 +523,6 @@ export class PortfolioController {
     }
 
     const { holdings } = await this.portfolioService.getDetails({
-      dateRange: 'max',
       filters: [{ id: 'EQUITY', type: 'ASSET_CLASS' }],
       impersonationId: access.userId,
       userId: user.id
