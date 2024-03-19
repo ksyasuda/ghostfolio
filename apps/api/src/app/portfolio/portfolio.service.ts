@@ -147,8 +147,7 @@ export class PortfolioService {
         filters,
         withExcludedAccounts,
         impersonationId: userId,
-        userId: this.request.user.id,
-        withLiabilities: true
+        userId: this.request.user.id
       })
     ]);
 
@@ -296,10 +295,9 @@ export class PortfolioService {
     const { items } = await this.getChart({
       dateRange,
       impersonationId,
-      portfolioOrders,
+      portfolioCalculator,
       transactionPoints,
       userId,
-      userCurrency: this.request.user.Settings.settings.baseCurrency,
       withDataDecimation: false
     });
 
@@ -359,16 +357,22 @@ export class PortfolioService {
       (user.Settings?.settings as UserSettings)?.emergencyFund ?? 0
     );
 
+    let types = getAllActivityTypes().filter((activityType) => {
+      return activityType !== 'FEE';
+    });
+
+    if (withLiabilities === false) {
+      types = types.filter((activityType) => {
+        return activityType !== 'LIABILITY';
+      });
+    }
+
     const { activities, portfolioOrders, transactionPoints } =
       await this.getTransactionPoints({
         filters,
+        types,
         userId,
-        withExcludedAccounts,
-        types: withLiabilities
-          ? undefined
-          : getAllActivityTypes().filter((activityType) => {
-              return activityType !== 'LIABILITY';
-            })
+        withExcludedAccounts
       });
 
     const portfolioCalculator = new PortfolioCalculator({
@@ -395,14 +399,24 @@ export class PortfolioService {
     });
 
     const holdings: PortfolioDetails['holdings'] = {};
+
     const totalValueInBaseCurrency =
       currentPositions.currentValueInBaseCurrency.plus(
         cashDetails.balanceInBaseCurrency
       );
 
     const isFilteredByAccount =
-      filters?.some((filter) => {
-        return filter.type === 'ACCOUNT';
+      filters?.some(({ type }) => {
+        return type === 'ACCOUNT';
+      }) ?? false;
+
+    const isFilteredByCash = filters?.some(({ id, type }) => {
+      return id === 'CASH' && type === 'ASSET_CLASS';
+    });
+
+    const isFilteredByClosedHoldings =
+      filters?.some(({ id, type }) => {
+        return id === 'CLOSED' && type === 'HOLDING_TYPE';
       }) ?? false;
 
     let filteredValueInBaseCurrency = isFilteredByAccount
@@ -454,7 +468,6 @@ export class PortfolioService {
       grossPerformancePercentageWithCurrencyEffect,
       investment,
       marketPrice,
-      marketPriceInBaseCurrency,
       netPerformance,
       netPerformancePercentage,
       netPerformancePercentageWithCurrencyEffect,
@@ -465,9 +478,16 @@ export class PortfolioService {
       transactionCount,
       valueInBaseCurrency
     } of currentPositions.positions) {
-      if (quantity.eq(0)) {
-        // Ignore positions without any quantity
-        continue;
+      if (isFilteredByClosedHoldings === true) {
+        if (!quantity.eq(0)) {
+          // Ignore positions with a quantity
+          continue;
+        }
+      } else {
+        if (quantity.eq(0)) {
+          // Ignore positions without any quantity
+          continue;
+        }
       }
 
       const symbolProfile = symbolProfileMap[symbol];
@@ -581,10 +601,6 @@ export class PortfolioService {
         valueInBaseCurrency: valueInBaseCurrency.toNumber()
       };
     }
-
-    const isFilteredByCash = filters?.some((filter) => {
-      return filter.type === 'ASSET_CLASS' && filter.id === 'CASH';
-    });
 
     if (filters?.length === 0 || isFilteredByAccount || isFilteredByCash) {
       const cashPositions = await this.getCashPositions({
@@ -1220,9 +1236,8 @@ export class PortfolioService {
     const { items } = await this.getChart({
       dateRange,
       impersonationId,
-      portfolioOrders,
+      portfolioCalculator,
       transactionPoints,
-      userCurrency,
       userId
     });
 
@@ -1447,17 +1462,15 @@ export class PortfolioService {
   private async getChart({
     dateRange = 'max',
     impersonationId,
-    portfolioOrders,
+    portfolioCalculator,
     transactionPoints,
-    userCurrency,
     userId,
     withDataDecimation = true
   }: {
     dateRange?: DateRange;
     impersonationId: string;
-    portfolioOrders: PortfolioOrder[];
+    portfolioCalculator: PortfolioCalculator;
     transactionPoints: TransactionPoint[];
-    userCurrency: string;
     userId: string;
     withDataDecimation?: boolean;
   }): Promise<HistoricalDataContainer> {
@@ -1470,15 +1483,6 @@ export class PortfolioService {
     }
 
     userId = await this.getUserId(impersonationId, userId);
-
-    const portfolioCalculator = new PortfolioCalculator({
-      currency: userCurrency,
-      currentRateService: this.currentRateService,
-      exchangeRateDataService: this.exchangeRateDataService,
-      orders: portfolioOrders
-    });
-
-    portfolioCalculator.setTransactionPoints(transactionPoints);
 
     const endDate = new Date();
 

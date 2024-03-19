@@ -144,7 +144,7 @@ docker compose --env-file ./.env -f docker/docker-compose.build.yml up -d
 
 ### Home Server Systems (Community)
 
-Ghostfolio is available for various home server systems, including [Runtipi](https://www.runtipi.io/docs/apps-available), [TrueCharts](https://truecharts.org/charts/stable/ghostfolio), [Umbrel](https://apps.umbrel.com/app/ghostfolio), and [Unraid](https://unraid.net/community/apps?q=ghostfolio).
+Ghostfolio is available for various home server systems, including [CasaOS](https://github.com/bigbeartechworld/big-bear-casaos), [Runtipi](https://www.runtipi.io/docs/apps-available), [TrueCharts](https://truecharts.org/charts/stable/ghostfolio), [Umbrel](https://apps.umbrel.com/app/ghostfolio), and [Unraid](https://unraid.net/community/apps?q=ghostfolio).
 
 ## Development
 
@@ -154,7 +154,7 @@ Ghostfolio is available for various home server systems, including [Runtipi](htt
 - [Node.js](https://nodejs.org/en/download) (version 18+)
 - [Yarn](https://yarnpkg.com/en/docs/install)
 - Create a local copy of this Git repository (clone)
-- Copy the file `.env.example` to `.env` and populate it with your data (`cp .env.example .env`)
+- Copy the file `.env.dev` to `.env` and populate it with your data (`cp .env.dev .env`)
 
 ### Setup
 

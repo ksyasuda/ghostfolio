@@ -62,6 +62,7 @@ export class DataService {
         ACCOUNT: filtersByAccount,
         ASSET_CLASS: filtersByAssetClass,
         ASSET_SUB_CLASS: filtersByAssetSubClass,
+        HOLDING_TYPE: filtersByHoldingType,
         PRESET_ID: filtersByPresetId,
         SEARCH_QUERY: filtersBySearchQuery,
         TAG: filtersByTag
@@ -100,6 +101,10 @@ export class DataService {
             })
             .join(',')
         );
+      }
+
+      if (filtersByHoldingType) {
+        params = params.append('holdingType', filtersByHoldingType[0].id);
       }
 
       if (filtersByPresetId) {
@@ -390,13 +395,21 @@ export class DataService {
   }
 
   public fetchPortfolioDetails({
-    filters
+    filters,
+    withLiabilities = false
   }: {
     filters?: Filter[];
+    withLiabilities?: boolean;
   } = {}): Observable<PortfolioDetails> {
+    let params = this.buildFiltersAsQueryParams({ filters });
+
+    if (withLiabilities) {
+      params = params.append('withLiabilities', withLiabilities);
+    }
+
     return this.http
       .get<any>('/api/v1/portfolio/details', {
-        params: this.buildFiltersAsQueryParams({ filters })
+        params
       })
       .pipe(
         map((response) => {

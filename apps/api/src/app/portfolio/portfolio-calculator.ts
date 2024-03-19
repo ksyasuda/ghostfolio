@@ -602,8 +602,6 @@ export class PortfolioCalculator {
       );
 
       const {
-        dividend,
-        dividendInBaseCurrency,
         grossPerformance,
         grossPerformancePercentage,
         grossPerformancePercentageWithCurrencyEffect,
@@ -615,6 +613,8 @@ export class PortfolioCalculator {
         netPerformanceWithCurrencyEffect,
         timeWeightedInvestment,
         timeWeightedInvestmentWithCurrencyEffect,
+        totalDividend,
+        totalDividendInBaseCurrency,
         totalInvestment,
         totalInvestmentWithCurrencyEffect
       } = this.getSymbolMetrics({
@@ -629,8 +629,8 @@ export class PortfolioCalculator {
       hasAnySymbolMetricsErrors = hasAnySymbolMetricsErrors || hasErrors;
 
       positions.push({
-        dividend,
-        dividendInBaseCurrency,
+        dividend: totalDividend,
+        dividendInBaseCurrency: totalDividendInBaseCurrency,
         timeWeightedInvestment,
         timeWeightedInvestmentWithCurrencyEffect,
         averagePrice: item.averagePrice,
@@ -861,8 +861,6 @@ export class PortfolioCalculator {
     const currentExchangeRate = exchangeRates[format(new Date(), DATE_FORMAT)];
     const currentValues: { [date: string]: Big } = {};
     const currentValuesWithCurrencyEffect: { [date: string]: Big } = {};
-    let dividend = new Big(0);
-    let dividendInBaseCurrency = new Big(0);
     let fees = new Big(0);
     let feesAtStartDate = new Big(0);
     let feesAtStartDateWithCurrencyEffect = new Big(0);
@@ -892,14 +890,13 @@ export class PortfolioCalculator {
       [date: string]: Big;
     } = {};
 
+    let totalDividend = new Big(0);
+    let totalDividendInBaseCurrency = new Big(0);
     let totalInvestment = new Big(0);
+    let totalInvestmentFromBuyTransactions = new Big(0);
+    let totalInvestmentFromBuyTransactionsWithCurrencyEffect = new Big(0);
     let totalInvestmentWithCurrencyEffect = new Big(0);
-    let totalInvestmentWithGrossPerformanceFromSell = new Big(0);
-
-    let totalInvestmentWithGrossPerformanceFromSellWithCurrencyEffect = new Big(
-      0
-    );
-
+    let totalQuantityFromBuyTransactions = new Big(0);
     let totalUnits = new Big(0);
     let valueAtStartDate: Big;
     let valueAtStartDateWithCurrencyEffect: Big;
@@ -915,8 +912,6 @@ export class PortfolioCalculator {
       return {
         currentValues: {},
         currentValuesWithCurrencyEffect: {},
-        dividend: new Big(0),
-        dividendInBaseCurrency: new Big(0),
         grossPerformance: new Big(0),
         grossPerformancePercentage: new Big(0),
         grossPerformancePercentageWithCurrencyEffect: new Big(0),
@@ -937,6 +932,8 @@ export class PortfolioCalculator {
         timeWeightedInvestmentValues: {},
         timeWeightedInvestmentValuesWithCurrencyEffect: {},
         timeWeightedInvestmentWithCurrencyEffect: new Big(0),
+        totalDividend: new Big(0),
+        totalDividendInBaseCurrency: new Big(0),
         totalInvestment: new Big(0),
         totalInvestmentWithCurrencyEffect: new Big(0)
       };
@@ -957,8 +954,6 @@ export class PortfolioCalculator {
       return {
         currentValues: {},
         currentValuesWithCurrencyEffect: {},
-        dividend: new Big(0),
-        dividendInBaseCurrency: new Big(0),
         grossPerformance: new Big(0),
         grossPerformancePercentage: new Big(0),
         grossPerformancePercentageWithCurrencyEffect: new Big(0),
@@ -979,6 +974,8 @@ export class PortfolioCalculator {
         timeWeightedInvestmentValues: {},
         timeWeightedInvestmentValuesWithCurrencyEffect: {},
         timeWeightedInvestmentWithCurrencyEffect: new Big(0),
+        totalDividend: new Big(0),
+        totalDividendInBaseCurrency: new Big(0),
         totalInvestment: new Big(0),
         totalInvestmentWithCurrencyEffect: new Big(0)
       };
@@ -1138,9 +1135,21 @@ export class PortfolioCalculator {
         transactionInvestment = order.quantity
           .mul(order.unitPriceInBaseCurrency)
           .mul(getFactor(order.type));
+
         transactionInvestmentWithCurrencyEffect = order.quantity
           .mul(order.unitPriceInBaseCurrencyWithCurrencyEffect)
           .mul(getFactor(order.type));
+
+        totalQuantityFromBuyTransactions =
+          totalQuantityFromBuyTransactions.plus(order.quantity);
+
+        totalInvestmentFromBuyTransactions =
+          totalInvestmentFromBuyTransactions.plus(transactionInvestment);
+
+        totalInvestmentFromBuyTransactionsWithCurrencyEffect =
+          totalInvestmentFromBuyTransactionsWithCurrencyEffect.plus(
+            transactionInvestmentWithCurrencyEffect
+          );
       } else if (order.type === 'SELL') {
         if (totalUnits.gt(0)) {
           transactionInvestment = totalInvestment
@@ -1210,8 +1219,10 @@ export class PortfolioCalculator {
       totalUnits = totalUnits.plus(order.quantity.mul(getFactor(order.type)));
 
       if (order.type === 'DIVIDEND') {
-        dividend = dividend.plus(order.quantity.mul(order.unitPrice));
-        dividendInBaseCurrency = dividendInBaseCurrency.plus(
+        const dividend = order.quantity.mul(order.unitPrice);
+
+        totalDividend = totalDividend.plus(dividend);
+        totalDividendInBaseCurrency = totalDividendInBaseCurrency.plus(
           dividend.mul(exchangeRateAtOrderDate ?? 1)
         );
       }
@@ -1245,35 +1256,21 @@ export class PortfolioCalculator {
           grossPerformanceFromSellWithCurrencyEffect
         );
 
-      totalInvestmentWithGrossPerformanceFromSell =
-        totalInvestmentWithGrossPerformanceFromSell
-          .plus(transactionInvestment)
-          .plus(grossPerformanceFromSell);
-
-      totalInvestmentWithGrossPerformanceFromSellWithCurrencyEffect =
-        totalInvestmentWithGrossPerformanceFromSellWithCurrencyEffect
-          .plus(transactionInvestmentWithCurrencyEffect)
-          .plus(grossPerformanceFromSellWithCurrencyEffect);
-
-      lastAveragePrice = totalUnits.eq(0)
+      lastAveragePrice = totalQuantityFromBuyTransactions.eq(0)
         ? new Big(0)
-        : totalInvestmentWithGrossPerformanceFromSell.div(totalUnits);
+        : totalInvestmentFromBuyTransactions.div(
+            totalQuantityFromBuyTransactions
+          );
 
-      lastAveragePriceWithCurrencyEffect = totalUnits.eq(0)
+      lastAveragePriceWithCurrencyEffect = totalQuantityFromBuyTransactions.eq(
+        0
+      )
         ? new Big(0)
-        : totalInvestmentWithGrossPerformanceFromSellWithCurrencyEffect.div(
-            totalUnits
+        : totalInvestmentFromBuyTransactionsWithCurrencyEffect.div(
+            totalQuantityFromBuyTransactions
           );
 
       if (PortfolioCalculator.ENABLE_LOGGING) {
-        console.log(
-          'totalInvestmentWithGrossPerformanceFromSell',
-          totalInvestmentWithGrossPerformanceFromSell.toNumber()
-        );
-        console.log(
-          'totalInvestmentWithGrossPerformanceFromSellWithCurrencyEffect',
-          totalInvestmentWithGrossPerformanceFromSellWithCurrencyEffect.toNumber()
-        );
         console.log(
           'grossPerformanceFromSells',
           grossPerformanceFromSells.toNumber()
@@ -1319,11 +1316,10 @@ export class PortfolioCalculator {
             orderDate,
             previousOrderDate
           );
-
-          // Set to at least 1 day, otherwise the transactions on the same day
-          // would not be considered in the time weighted calculation
           if (daysSinceLastOrder <= 0) {
-            daysSinceLastOrder = 1;
+            // The time between two activities on the same day is unknown
+            // -> Set it to the smallest floating point number greater than 0
+            daysSinceLastOrder = Number.EPSILON;
           }
 
           // Sum up the total investment days since the start date to calculate
@@ -1501,7 +1497,7 @@ export class PortfolioCalculator {
         Time weighted investment with currency effect: ${timeWeightedAverageInvestmentBetweenStartAndEndDateWithCurrencyEffect.toFixed(
           2
         )}
-        Total dividend: ${dividend.toFixed(2)}
+        Total dividend: ${totalDividend.toFixed(2)}
         Gross performance: ${totalGrossPerformance.toFixed(
           2
         )} / ${grossPerformancePercentage.mul(100).toFixed(2)}%
@@ -1526,8 +1522,6 @@ export class PortfolioCalculator {
     return {
       currentValues,
       currentValuesWithCurrencyEffect,
-      dividend,
-      dividendInBaseCurrency,
       grossPerformancePercentage,
       grossPerformancePercentageWithCurrencyEffect,
       initialValue,
@@ -1541,6 +1535,8 @@ export class PortfolioCalculator {
       netPerformanceValuesWithCurrencyEffect,
       timeWeightedInvestmentValues,
       timeWeightedInvestmentValuesWithCurrencyEffect,
+      totalDividend,
+      totalDividendInBaseCurrency,
       totalInvestment,
       totalInvestmentWithCurrencyEffect,
       grossPerformance: totalGrossPerformance,
