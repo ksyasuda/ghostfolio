@@ -998,10 +998,10 @@ export class PortfolioService {
       currency: this.request.user.Settings.settings.baseCurrency
     });
 
-    portfolioCalculator.setTransactionPoints(transactionPoints);
+    // portfolioCalculator.setTransactionPoints(transactionPoints);
 
-    const portfolioStart = parseDate(transactionPoints[0].date);
-    const startDate = this.getStartDate(dateRange, portfolioStart);
+    // const portfolioStart = parseDate(transactionPoints[0].date);
+    // const startDate = this.getStartDate(dateRange, portfolioStart);
     const currentPositions = await portfolioCalculator.getCurrentPositions(
       startDate,
       endDate
@@ -1627,81 +1627,81 @@ export class PortfolioService {
     };
   }
 
-  private getStartDate(aDateRange: DateRange, portfolioStart: Date) {
-    switch (aDateRange) {
-      case '1d':
-        portfolioStart = max([
-          portfolioStart,
-          subDays(new Date().setHours(0, 0, 0, 0), 1)
-        ]);
-        break;
-      case '5d':
-        portfolioStart = max([
-          portfolioStart,
-          subDays(new Date().setHours(0, 0, 0, 0), 5)
-        ]);
-        break;
-      case '1w':
-        portfolioStart = max([
-          portfolioStart,
-          subDays(new Date().setHours(0, 0, 0, 0), 7)
-        ]);
-        break;
-      case '1m':
-        portfolioStart = max([
-          portfolioStart,
-          subMonths(new Date().setHours(0, 0, 0, 0), 1)
-        ]);
-        break;
-      case '3m':
-        portfolioStart = max([
-          portfolioStart,
-          subMonths(new Date().setHours(0, 0, 0, 0), 3)
-        ]);
-        break;
-      case '6m':
-        portfolioStart = max([
-          portfolioStart,
-          subMonths(new Date().setHours(0, 0, 0, 0), 6)
-        ]);
-        break;
-      case 'mtd':
-        portfolioStart = max([
-          portfolioStart,
-          subDays(startOfMonth(new Date().setHours(0, 0, 0, 0)), 1)
-        ]);
-        break;
-      case 'wtd':
-        portfolioStart = max([
-          portfolioStart,
-          subDays(
-            startOfWeek(new Date().setHours(0, 0, 0, 0), { weekStartsOn: 1 }),
-            1
-          )
-        ]);
-        break;
-      case 'ytd':
-        portfolioStart = max([
-          portfolioStart,
-          subDays(startOfYear(new Date().setHours(0, 0, 0, 0)), 1)
-        ]);
-        break;
-      case '1y':
-        portfolioStart = max([
-          portfolioStart,
-          subYears(new Date().setHours(0, 0, 0, 0), 1)
-        ]);
-        break;
-      case '3y':
-        portfolioStart = max([
-          portfolioStart,
-          subYears(new Date().setHours(0, 0, 0, 0), 3)
-        ]);
-        break;
-    }
+  // private getStartDate(aDateRange: DateRange, portfolioStart: Date) {
+  //   switch (aDateRange) {
+  //     case '1d':
+  //       portfolioStart = max([
+  //         portfolioStart,
+  //         subDays(new Date().setHours(0, 0, 0, 0), 1)
+  //       ]);
+  //       break;
+  //     case '5d':
+  //       portfolioStart = max([
+  //         portfolioStart,
+  //         subDays(new Date().setHours(0, 0, 0, 0), 5)
+  //       ]);
+  //       break;
+  //     case '1w':
+  //       portfolioStart = max([
+  //         portfolioStart,
+  //         subDays(new Date().setHours(0, 0, 0, 0), 7)
+  //       ]);
+  //       break;
+  //     case '1m':
+  //       portfolioStart = max([
+  //         portfolioStart,
+  //         subMonths(new Date().setHours(0, 0, 0, 0), 1)
+  //       ]);
+  //       break;
+  //     case '3m':
+  //       portfolioStart = max([
+  //         portfolioStart,
+  //         subMonths(new Date().setHours(0, 0, 0, 0), 3)
+  //       ]);
+  //       break;
+  //     case '6m':
+  //       portfolioStart = max([
+  //         portfolioStart,
+  //         subMonths(new Date().setHours(0, 0, 0, 0), 6)
+  //       ]);
+  //       break;
+  //     case 'mtd':
+  //       portfolioStart = max([
+  //         portfolioStart,
+  //         subDays(startOfMonth(new Date().setHours(0, 0, 0, 0)), 1)
+  //       ]);
+  //       break;
+  //     case 'wtd':
+  //       portfolioStart = max([
+  //         portfolioStart,
+  //         subDays(
+  //           startOfWeek(new Date().setHours(0, 0, 0, 0), { weekStartsOn: 1 }),
+  //           1
+  //         )
+  //       ]);
+  //       break;
+  //     case 'ytd':
+  //       portfolioStart = max([
+  //         portfolioStart,
+  //         subDays(startOfYear(new Date().setHours(0, 0, 0, 0)), 1)
+  //       ]);
+  //       break;
+  //     case '1y':
+  //       portfolioStart = max([
+  //         portfolioStart,
+  //         subYears(new Date().setHours(0, 0, 0, 0), 1)
+  //       ]);
+  //       break;
+  //     case '3y':
+  //       portfolioStart = max([
+  //         portfolioStart,
+  //         subYears(new Date().setHours(0, 0, 0, 0), 3)
+  //       ]);
+  //       break;
+  //   }
 
-    return portfolioStart;
-  }
+  //   return portfolioStart;
+  // }
 
   private getStreaks({
     investments,
