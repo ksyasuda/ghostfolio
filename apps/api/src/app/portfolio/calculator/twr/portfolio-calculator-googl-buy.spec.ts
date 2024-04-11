@@ -1,12 +1,19 @@
+import { Activity } from '@ghostfolio/api/app/order/interfaces/activities.interface';
+import {
+  activityDummyData,
+  symbolProfileDummyData
+} from '@ghostfolio/api/app/portfolio/calculator/portfolio-calculator-test-utils';
+import {
+  PortfolioCalculatorFactory,
+  PerformanceCalculationType
+} from '@ghostfolio/api/app/portfolio/calculator/portfolio-calculator.factory';
 import { CurrentRateService } from '@ghostfolio/api/app/portfolio/current-rate.service';
+import { CurrentRateServiceMock } from '@ghostfolio/api/app/portfolio/current-rate.service.mock';
 import { ExchangeRateDataService } from '@ghostfolio/api/services/exchange-rate-data/exchange-rate-data.service';
 import { ExchangeRateDataServiceMock } from '@ghostfolio/api/services/exchange-rate-data/exchange-rate-data.service.mock';
 import { parseDate } from '@ghostfolio/common/helper';
 
 import { Big } from 'big.js';
-
-import { CurrentRateServiceMock } from './current-rate.service.mock';
-import { PortfolioCalculator } from './portfolio-calculator';
 
 jest.mock('@ghostfolio/api/app/portfolio/current-rate.service', () => {
   return {
@@ -32,6 +39,7 @@ jest.mock(
 describe('PortfolioCalculator', () => {
   let currentRateService: CurrentRateService;
   let exchangeRateDataService: ExchangeRateDataService;
+  let factory: PortfolioCalculatorFactory;
 
   beforeEach(() => {
     currentRateService = new CurrentRateService(null, null, null, null);
@@ -42,30 +50,38 @@ describe('PortfolioCalculator', () => {
       null,
       null
     );
+
+    factory = new PortfolioCalculatorFactory(
+      currentRateService,
+      exchangeRateDataService
+    );
   });
 
   describe('get current positions', () => {
     it.only('with GOOGL buy', async () => {
-      const portfolioCalculator = new PortfolioCalculator({
-        currentRateService,
-        exchangeRateDataService,
-        currency: 'CHF',
-        orders: [
-          {
+      const activities: Activity[] = [
+        {
+          ...activityDummyData,
+          date: new Date('2023-01-03'),
+          fee: 1,
+          quantity: 1,
+          SymbolProfile: {
+            ...symbolProfileDummyData,
             currency: 'USD',
-            date: '2023-01-03',
             dataSource: 'YAHOO',
-            fee: new Big(1),
             name: 'Alphabet Inc.',
-            quantity: new Big(1),
-            symbol: 'GOOGL',
-            type: 'BUY',
-            unitPrice: new Big(89.12)
-          }
-        ]
-      });
+            symbol: 'GOOGL'
+          },
+          type: 'BUY',
+          unitPrice: 89.12
+        }
+      ];
 
-      portfolioCalculator.computeTransactionPoints();
+      const portfolioCalculator = factory.createCalculator({
+        activities,
+        calculationType: PerformanceCalculationType.TWR,
+        currency: 'CHF'
+      });
 
       const spy = jest
         .spyOn(Date, 'now')

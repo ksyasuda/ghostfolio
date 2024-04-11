@@ -11,4 +11,5 @@ export type DateRange =
   | 'wtd'
   | 'max'
   | 'mtd'
-  | 'ytd';
+  | 'ytd'
+  | string; // '2024', '2023', '2022', etc.

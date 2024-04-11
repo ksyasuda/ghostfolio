@@ -375,6 +375,7 @@ export class AnalysisPageComponent implements OnDestroy, OnInit {
           .fetchBenchmarkBySymbol({
             dataSource,
             symbol,
+            range: this.user?.settings?.dateRange,
             startDate: this.firstOrderDate
           })
           .pipe(takeUntil(this.unsubscribeSubject))

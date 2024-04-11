@@ -212,6 +212,7 @@ export class AdminService {
           countries: true,
           currency: true,
           dataSource: true,
+          id: true,
           name: true,
           Order: {
             orderBy: [{ date: 'asc' }],
@@ -235,6 +236,7 @@ export class AdminService {
         countries,
         currency,
         dataSource,
+        id,
         name,
         Order,
         sectors,
@@ -257,6 +259,7 @@ export class AdminService {
           currency,
           countriesCount,
           dataSource,
+          id,
           name,
           symbol,
           marketDataItemCount,
@@ -331,19 +334,35 @@ export class AdminService {
     symbol,
     symbolMapping
   }: Prisma.SymbolProfileUpdateInput & UniqueAsset) {
-    await this.symbolProfileService.updateSymbolProfile({
-      assetClass,
-      assetSubClass,
-      comment,
-      countries,
-      currency,
-      dataSource,
-      name,
-      scraperConfiguration,
-      sectors,
-      symbol,
-      symbolMapping
-    });
+    const updatedSymbolProfile: Prisma.SymbolProfileUpdateInput & UniqueAsset =
+      {
+        assetClass,
+        assetSubClass,
+        comment,
+        countries,
+        currency,
+        dataSource,
+        scraperConfiguration,
+        sectors,
+        symbol,
+        symbolMapping,
+        ...(dataSource === 'MANUAL'
+          ? { name }
+          : {
+              SymbolProfileOverrides: {
+                upsert: {
+                  create: {
+                    name: name as string
+                  },
+                  update: {
+                    name: name as string
+                  }
+                }
+              }
+            })
+      };
+
+    await this.symbolProfileService.updateSymbolProfile(updatedSymbolProfile);
 
     const [symbolProfile] = await this.symbolProfileService.getSymbolProfiles([
       {
@@ -397,6 +416,7 @@ export class AdminService {
           assetClass: 'CASH',
           countriesCount: 0,
           currency: symbol.replace(DEFAULT_CURRENCY, ''),
+          id: undefined,
           name: symbol,
           sectorsCount: 0
         };

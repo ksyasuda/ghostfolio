@@ -1,16 +1,13 @@
+import { PortfolioCalculator } from '@ghostfolio/api/app/portfolio/calculator/portfolio-calculator';
+import { CurrentPositions } from '@ghostfolio/api/app/portfolio/interfaces/current-positions.interface';
+import { PortfolioOrderItem } from '@ghostfolio/api/app/portfolio/interfaces/portfolio-order-item.interface';
 import { getFactor } from '@ghostfolio/api/helper/portfolio.helper';
-import { ExchangeRateDataService } from '@ghostfolio/api/services/exchange-rate-data/exchange-rate-data.service';
-import { IDataGatheringItem } from '@ghostfolio/api/services/interfaces/interfaces';
-import { DATE_FORMAT, parseDate, resetHours } from '@ghostfolio/common/helper';
+import { DATE_FORMAT } from '@ghostfolio/common/helper';
 import {
-  DataProviderInfo,
-  HistoricalDataItem,
-  InvestmentItem,
-  ResponseError,
   SymbolMetrics,
-  TimelinePosition
+  TimelinePosition,
+  UniqueAsset
 } from '@ghostfolio/common/interfaces';
-import { GroupBy } from '@ghostfolio/common/types';
 
 import { Logger } from '@nestjs/common';
 import { Big } from 'big.js';
@@ -18,727 +15,15 @@ import {
   addDays,
   addMilliseconds,
   differenceInDays,
-  endOfDay,
   format,
-  isBefore,
-  isSameDay,
-  max,
-  subDays
+  isBefore
 } from 'date-fns';
-import { cloneDeep, first, isNumber, last, sortBy, uniq } from 'lodash';
-
-import { CurrentRateService } from './current-rate.service';
-import { CurrentPositions } from './interfaces/current-positions.interface';
-import { PortfolioOrderItem } from './interfaces/portfolio-calculator.interface';
-import { PortfolioOrder } from './interfaces/portfolio-order.interface';
-import { TransactionPointSymbol } from './interfaces/transaction-point-symbol.interface';
-import { TransactionPoint } from './interfaces/transaction-point.interface';
-
-export class PortfolioCalculator {
-  private static readonly ENABLE_LOGGING = false;
-
-  private currency: string;
-  private currentRateService: CurrentRateService;
-  private dataProviderInfos: DataProviderInfo[];
-  private exchangeRateDataService: ExchangeRateDataService;
-  private orders: PortfolioOrder[];
-  private transactionPoints: TransactionPoint[];
-
-  public constructor({
-    currency,
-    currentRateService,
-    exchangeRateDataService,
-    orders
-  }: {
-    currency: string;
-    currentRateService: CurrentRateService;
-    exchangeRateDataService: ExchangeRateDataService;
-    orders: PortfolioOrder[];
-  }) {
-    this.currency = currency;
-    this.currentRateService = currentRateService;
-    this.exchangeRateDataService = exchangeRateDataService;
-    this.orders = orders;
-
-    this.orders.sort((a, b) => {
-      return a.date?.localeCompare(b.date);
-    });
-  }
-
-  public computeTransactionPoints() {
-    this.transactionPoints = [];
-    const symbols: { [symbol: string]: TransactionPointSymbol } = {};
-
-    let lastDate: string = null;
-    let lastTransactionPoint: TransactionPoint = null;
-
-    for (const order of this.orders) {
-      const currentDate = order.date;
-
-      let currentTransactionPointItem: TransactionPointSymbol;
-      const oldAccumulatedSymbol = symbols[order.symbol];
-
-      const factor = getFactor(order.type);
-
-      if (oldAccumulatedSymbol) {
-        let investment = oldAccumulatedSymbol.investment;
-
-        const newQuantity = order.quantity
-          .mul(factor)
-          .plus(oldAccumulatedSymbol.quantity);
-
-        if (order.type === 'BUY') {
-          investment = oldAccumulatedSymbol.investment.plus(
-            order.quantity.mul(order.unitPrice)
-          );
-        } else if (order.type === 'SELL') {
-          investment = oldAccumulatedSymbol.investment.minus(
-            order.quantity.mul(oldAccumulatedSymbol.averagePrice)
-          );
-        }
-
-        currentTransactionPointItem = {
-          investment,
-          averagePrice: newQuantity.gt(0)
-            ? investment.div(newQuantity)
-            : new Big(0),
-          currency: order.currency,
-          dataSource: order.dataSource,
-          dividend: new Big(0),
-          fee: order.fee.plus(oldAccumulatedSymbol.fee),
-          firstBuyDate: oldAccumulatedSymbol.firstBuyDate,
-          quantity: newQuantity,
-          symbol: order.symbol,
-          tags: order.tags,
-          transactionCount: oldAccumulatedSymbol.transactionCount + 1
-        };
-      } else {
-        currentTransactionPointItem = {
-          averagePrice: order.unitPrice,
-          currency: order.currency,
-          dataSource: order.dataSource,
-          dividend: new Big(0),
-          fee: order.fee,
-          firstBuyDate: order.date,
-          investment: order.unitPrice.mul(order.quantity).mul(factor),
-          quantity: order.quantity.mul(factor),
-          symbol: order.symbol,
-          tags: order.tags,
-          transactionCount: 1
-        };
-      }
-
-      symbols[order.symbol] = currentTransactionPointItem;
-
-      const items = lastTransactionPoint?.items ?? [];
-
-      const newItems = items.filter(
-        (transactionPointItem) => transactionPointItem.symbol !== order.symbol
-      );
-
-      newItems.push(currentTransactionPointItem);
-
-      newItems.sort((a, b) => {
-        return a.symbol?.localeCompare(b.symbol);
-      });
-
-      if (lastDate !== currentDate || lastTransactionPoint === null) {
-        lastTransactionPoint = {
-          date: currentDate,
-          items: newItems
-        };
-
-        this.transactionPoints.push(lastTransactionPoint);
-      } else {
-        lastTransactionPoint.items = newItems;
-      }
-
-      lastDate = currentDate;
-    }
-  }
-
-  public getAnnualizedPerformancePercent({
-    daysInMarket,
-    netPerformancePercent
-  }: {
-    daysInMarket: number;
-    netPerformancePercent: Big;
-  }): Big {
-    if (isNumber(daysInMarket) && daysInMarket > 0) {
-      const exponent = new Big(365).div(daysInMarket).toNumber();
-      return new Big(
-        Math.pow(netPerformancePercent.plus(1).toNumber(), exponent)
-      ).minus(1);
-    }
-
-    return new Big(0);
-  }
-
-  public getTransactionPoints(): TransactionPoint[] {
-    return this.transactionPoints;
-  }
-
-  public setTransactionPoints(transactionPoints: TransactionPoint[]) {
-    this.transactionPoints = transactionPoints;
-  }
-
-  public async getChartData({
-    end = new Date(Date.now()),
-    start,
-    step = 1
-  }: {
-    end?: Date;
-    start: Date;
-    step?: number;
-  }): Promise<HistoricalDataItem[]> {
-    const symbols: { [symbol: string]: boolean } = {};
-
-    const transactionPointsBeforeEndDate =
-      this.transactionPoints?.filter((transactionPoint) => {
-        return isBefore(parseDate(transactionPoint.date), end);
-      }) ?? [];
-
-    const currencies: { [symbol: string]: string } = {};
-    const dates: Date[] = [];
-    const dataGatheringItems: IDataGatheringItem[] = [];
-    const firstIndex = transactionPointsBeforeEndDate.length;
-
-    let day = start;
-
-    while (isBefore(day, end)) {
-      dates.push(resetHours(day));
-      day = addDays(day, step);
-    }
-
-    if (!isSameDay(last(dates), end)) {
-      dates.push(resetHours(end));
-    }
-
-    if (transactionPointsBeforeEndDate.length > 0) {
-      for (const item of transactionPointsBeforeEndDate[firstIndex - 1].items) {
-        dataGatheringItems.push({
-          dataSource: item.dataSource,
-          symbol: item.symbol
-        });
-        currencies[item.symbol] = item.currency;
-        symbols[item.symbol] = true;
-      }
-    }
-
-    const { dataProviderInfos, values: marketSymbols } =
-      await this.currentRateService.getValues({
-        dataGatheringItems,
-        dateQuery: {
-          in: dates
-        }
-      });
-
-    this.dataProviderInfos = dataProviderInfos;
-
-    const marketSymbolMap: {
-      [date: string]: { [symbol: string]: Big };
-    } = {};
-
-    let exchangeRatesByCurrency =
-      await this.exchangeRateDataService.getExchangeRatesByCurrency({
-        currencies: uniq(Object.values(currencies)),
-        endDate: endOfDay(end),
-        startDate: parseDate(this.transactionPoints?.[0]?.date),
-        targetCurrency: this.currency
-      });
-
-    for (const marketSymbol of marketSymbols) {
-      const dateString = format(marketSymbol.date, DATE_FORMAT);
-      if (!marketSymbolMap[dateString]) {
-        marketSymbolMap[dateString] = {};
-      }
-      if (marketSymbol.marketPrice) {
-        marketSymbolMap[dateString][marketSymbol.symbol] = new Big(
-          marketSymbol.marketPrice
-        );
-      }
-    }
-
-    const accumulatedValuesByDate: {
-      [date: string]: {
-        investmentValueWithCurrencyEffect: Big;
-        totalCurrentValue: Big;
-        totalCurrentValueWithCurrencyEffect: Big;
-        totalInvestmentValue: Big;
-        totalInvestmentValueWithCurrencyEffect: Big;
-        totalNetPerformanceValue: Big;
-        totalNetPerformanceValueWithCurrencyEffect: Big;
-        totalTimeWeightedInvestmentValue: Big;
-        totalTimeWeightedInvestmentValueWithCurrencyEffect: Big;
-      };
-    } = {};
-
-    const valuesBySymbol: {
-      [symbol: string]: {
-        currentValues: { [date: string]: Big };
-        currentValuesWithCurrencyEffect: { [date: string]: Big };
-        investmentValuesAccumulated: { [date: string]: Big };
-        investmentValuesAccumulatedWithCurrencyEffect: { [date: string]: Big };
-        investmentValuesWithCurrencyEffect: { [date: string]: Big };
-        netPerformanceValues: { [date: string]: Big };
-        netPerformanceValuesWithCurrencyEffect: { [date: string]: Big };
-        timeWeightedInvestmentValues: { [date: string]: Big };
-        timeWeightedInvestmentValuesWithCurrencyEffect: { [date: string]: Big };
-      };
-    } = {};
-
-    for (const symbol of Object.keys(symbols)) {
-      const {
-        currentValues,
-        currentValuesWithCurrencyEffect,
-        investmentValuesAccumulated,
-        investmentValuesAccumulatedWithCurrencyEffect,
-        investmentValuesWithCurrencyEffect,
-        netPerformanceValues,
-        netPerformanceValuesWithCurrencyEffect,
-        timeWeightedInvestmentValues,
-        timeWeightedInvestmentValuesWithCurrencyEffect
-      } = this.getSymbolMetrics({
-        end,
-        marketSymbolMap,
-        start,
-        step,
-        symbol,
-        exchangeRates:
-          exchangeRatesByCurrency[`${currencies[symbol]}${this.currency}`],
-        isChartMode: true
-      });
-
-      valuesBySymbol[symbol] = {
-        currentValues,
-        currentValuesWithCurrencyEffect,
-        investmentValuesAccumulated,
-        investmentValuesAccumulatedWithCurrencyEffect,
-        investmentValuesWithCurrencyEffect,
-        netPerformanceValues,
-        netPerformanceValuesWithCurrencyEffect,
-        timeWeightedInvestmentValues,
-        timeWeightedInvestmentValuesWithCurrencyEffect
-      };
-    }
-
-    for (const currentDate of dates) {
-      const dateString = format(currentDate, DATE_FORMAT);
-
-      for (const symbol of Object.keys(valuesBySymbol)) {
-        const symbolValues = valuesBySymbol[symbol];
-
-        const currentValue =
-          symbolValues.currentValues?.[dateString] ?? new Big(0);
-
-        const currentValueWithCurrencyEffect =
-          symbolValues.currentValuesWithCurrencyEffect?.[dateString] ??
-          new Big(0);
-
-        const investmentValueAccumulated =
-          symbolValues.investmentValuesAccumulated?.[dateString] ?? new Big(0);
-
-        const investmentValueAccumulatedWithCurrencyEffect =
-          symbolValues.investmentValuesAccumulatedWithCurrencyEffect?.[
-            dateString
-          ] ?? new Big(0);
-
-        const investmentValueWithCurrencyEffect =
-          symbolValues.investmentValuesWithCurrencyEffect?.[dateString] ??
-          new Big(0);
-
-        const netPerformanceValue =
-          symbolValues.netPerformanceValues?.[dateString] ?? new Big(0);
-
-        const netPerformanceValueWithCurrencyEffect =
-          symbolValues.netPerformanceValuesWithCurrencyEffect?.[dateString] ??
-          new Big(0);
-
-        const timeWeightedInvestmentValue =
-          symbolValues.timeWeightedInvestmentValues?.[dateString] ?? new Big(0);
-
-        const timeWeightedInvestmentValueWithCurrencyEffect =
-          symbolValues.timeWeightedInvestmentValuesWithCurrencyEffect?.[
-            dateString
-          ] ?? new Big(0);
-
-        accumulatedValuesByDate[dateString] = {
-          investmentValueWithCurrencyEffect: (
-            accumulatedValuesByDate[dateString]
-              ?.investmentValueWithCurrencyEffect ?? new Big(0)
-          ).add(investmentValueWithCurrencyEffect),
-          totalCurrentValue: (
-            accumulatedValuesByDate[dateString]?.totalCurrentValue ?? new Big(0)
-          ).add(currentValue),
-          totalCurrentValueWithCurrencyEffect: (
-            accumulatedValuesByDate[dateString]
-              ?.totalCurrentValueWithCurrencyEffect ?? new Big(0)
-          ).add(currentValueWithCurrencyEffect),
-          totalInvestmentValue: (
-            accumulatedValuesByDate[dateString]?.totalInvestmentValue ??
-            new Big(0)
-          ).add(investmentValueAccumulated),
-          totalInvestmentValueWithCurrencyEffect: (
-            accumulatedValuesByDate[dateString]
-              ?.totalInvestmentValueWithCurrencyEffect ?? new Big(0)
-          ).add(investmentValueAccumulatedWithCurrencyEffect),
-          totalNetPerformanceValue: (
-            accumulatedValuesByDate[dateString]?.totalNetPerformanceValue ??
-            new Big(0)
-          ).add(netPerformanceValue),
-          totalNetPerformanceValueWithCurrencyEffect: (
-            accumulatedValuesByDate[dateString]
-              ?.totalNetPerformanceValueWithCurrencyEffect ?? new Big(0)
-          ).add(netPerformanceValueWithCurrencyEffect),
-          totalTimeWeightedInvestmentValue: (
-            accumulatedValuesByDate[dateString]
-              ?.totalTimeWeightedInvestmentValue ?? new Big(0)
-          ).add(timeWeightedInvestmentValue),
-          totalTimeWeightedInvestmentValueWithCurrencyEffect: (
-            accumulatedValuesByDate[dateString]
-              ?.totalTimeWeightedInvestmentValueWithCurrencyEffect ?? new Big(0)
-          ).add(timeWeightedInvestmentValueWithCurrencyEffect)
-        };
-      }
-    }
-
-    return Object.entries(accumulatedValuesByDate).map(([date, values]) => {
-      const {
-        investmentValueWithCurrencyEffect,
-        totalCurrentValue,
-        totalCurrentValueWithCurrencyEffect,
-        totalInvestmentValue,
-        totalInvestmentValueWithCurrencyEffect,
-        totalNetPerformanceValue,
-        totalNetPerformanceValueWithCurrencyEffect,
-        totalTimeWeightedInvestmentValue,
-        totalTimeWeightedInvestmentValueWithCurrencyEffect
-      } = values;
-
-      const netPerformanceInPercentage = totalTimeWeightedInvestmentValue.eq(0)
-        ? 0
-        : totalNetPerformanceValue
-            .div(totalTimeWeightedInvestmentValue)
-            .mul(100)
-            .toNumber();
-
-      const netPerformanceInPercentageWithCurrencyEffect =
-        totalTimeWeightedInvestmentValueWithCurrencyEffect.eq(0)
-          ? 0
-          : totalNetPerformanceValueWithCurrencyEffect
-              .div(totalTimeWeightedInvestmentValueWithCurrencyEffect)
-              .mul(100)
-              .toNumber();
-
-      return {
-        date,
-        netPerformanceInPercentage,
-        netPerformanceInPercentageWithCurrencyEffect,
-        investmentValueWithCurrencyEffect:
-          investmentValueWithCurrencyEffect.toNumber(),
-        netPerformance: totalNetPerformanceValue.toNumber(),
-        netPerformanceWithCurrencyEffect:
-          totalNetPerformanceValueWithCurrencyEffect.toNumber(),
-        totalInvestment: totalInvestmentValue.toNumber(),
-        totalInvestmentValueWithCurrencyEffect:
-          totalInvestmentValueWithCurrencyEffect.toNumber(),
-        value: totalCurrentValue.toNumber(),
-        valueWithCurrencyEffect: totalCurrentValueWithCurrencyEffect.toNumber()
-      };
-    });
-  }
-
-  public async getCurrentPositions(
-    start: Date,
-    end?: Date
-  ): Promise<CurrentPositions> {
-    const lastTransactionPoint = last(this.transactionPoints);
-
-    let endDate = end;
-
-    if (!endDate) {
-      endDate = new Date(Date.now());
-
-      if (lastTransactionPoint) {
-        endDate = max([endDate, parseDate(lastTransactionPoint.date)]);
-      }
-    }
-
-    const transactionPoints = this.transactionPoints?.filter(({ date }) => {
-      return isBefore(parseDate(date), endDate);
-    });
-
-    if (!transactionPoints.length) {
-      return {
-        currentValueInBaseCurrency: new Big(0),
-        grossPerformance: new Big(0),
-        grossPerformancePercentage: new Big(0),
-        grossPerformancePercentageWithCurrencyEffect: new Big(0),
-        grossPerformanceWithCurrencyEffect: new Big(0),
-        hasErrors: false,
-        netPerformance: new Big(0),
-        netPerformancePercentage: new Big(0),
-        netPerformancePercentageWithCurrencyEffect: new Big(0),
-        netPerformanceWithCurrencyEffect: new Big(0),
-        positions: [],
-        totalInvestment: new Big(0)
-      };
-    }
-
-    const currencies: { [symbol: string]: string } = {};
-    const dataGatheringItems: IDataGatheringItem[] = [];
-    let dates: Date[] = [];
-    let firstIndex = transactionPoints.length;
-    let firstTransactionPoint: TransactionPoint = null;
-
-    dates.push(resetHours(start));
-
-    for (const { currency, dataSource, symbol } of transactionPoints[
-      firstIndex - 1
-    ].items) {
-      dataGatheringItems.push({
-        dataSource,
-        symbol
-      });
-
-      currencies[symbol] = currency;
-    }
-
-    for (let i = 0; i < transactionPoints.length; i++) {
-      if (
-        !isBefore(parseDate(transactionPoints[i].date), start) &&
-        firstTransactionPoint === null
-      ) {
-        firstTransactionPoint = transactionPoints[i];
-        firstIndex = i;
-      }
-
-      if (firstTransactionPoint !== null) {
-        dates.push(resetHours(parseDate(transactionPoints[i].date)));
-      }
-    }
-
-    dates.push(resetHours(endDate));
-
-    // Add dates of last week for fallback
-    dates.push(subDays(resetHours(new Date()), 7));
-    dates.push(subDays(resetHours(new Date()), 6));
-    dates.push(subDays(resetHours(new Date()), 5));
-    dates.push(subDays(resetHours(new Date()), 4));
-    dates.push(subDays(resetHours(new Date()), 3));
-    dates.push(subDays(resetHours(new Date()), 2));
-    dates.push(subDays(resetHours(new Date()), 1));
-    dates.push(resetHours(new Date()));
-
-    dates = uniq(
-      dates.map((date) => {
-        return date.getTime();
-      })
-    )
-      .map((timestamp) => {
-        return new Date(timestamp);
-      })
-      .sort((a, b) => {
-        return a.getTime() - b.getTime();
-      });
-
-    let exchangeRatesByCurrency =
-      await this.exchangeRateDataService.getExchangeRatesByCurrency({
-        currencies: uniq(Object.values(currencies)),
-        endDate: endOfDay(endDate),
-        startDate: parseDate(this.transactionPoints?.[0]?.date),
-        targetCurrency: this.currency
-      });
-
-    const {
-      dataProviderInfos,
-      errors: currentRateErrors,
-      values: marketSymbols
-    } = await this.currentRateService.getValues({
-      dataGatheringItems,
-      dateQuery: {
-        in: dates
-      }
-    });
-
-    this.dataProviderInfos = dataProviderInfos;
-
-    const marketSymbolMap: {
-      [date: string]: { [symbol: string]: Big };
-    } = {};
-
-    for (const marketSymbol of marketSymbols) {
-      const date = format(marketSymbol.date, DATE_FORMAT);
-
-      if (!marketSymbolMap[date]) {
-        marketSymbolMap[date] = {};
-      }
-
-      if (marketSymbol.marketPrice) {
-        marketSymbolMap[date][marketSymbol.symbol] = new Big(
-          marketSymbol.marketPrice
-        );
-      }
-    }
-
-    const endDateString = format(endDate, DATE_FORMAT);
-
-    if (firstIndex > 0) {
-      firstIndex--;
-    }
-
-    const positions: TimelinePosition[] = [];
-    let hasAnySymbolMetricsErrors = false;
-
-    const errors: ResponseError['errors'] = [];
-
-    for (const item of lastTransactionPoint.items) {
-      const marketPriceInBaseCurrency = (
-        marketSymbolMap[endDateString]?.[item.symbol] ?? item.averagePrice
-      ).mul(
-        exchangeRatesByCurrency[`${item.currency}${this.currency}`]?.[
-          endDateString
-        ]
-      );
-
-      const {
-        grossPerformance,
-        grossPerformancePercentage,
-        grossPerformancePercentageWithCurrencyEffect,
-        grossPerformanceWithCurrencyEffect,
-        hasErrors,
-        netPerformance,
-        netPerformancePercentage,
-        netPerformancePercentageWithCurrencyEffect,
-        netPerformanceWithCurrencyEffect,
-        timeWeightedInvestment,
-        timeWeightedInvestmentWithCurrencyEffect,
-        totalDividend,
-        totalDividendInBaseCurrency,
-        totalInvestment,
-        totalInvestmentWithCurrencyEffect
-      } = this.getSymbolMetrics({
-        marketSymbolMap,
-        start,
-        end: endDate,
-        exchangeRates:
-          exchangeRatesByCurrency[`${item.currency}${this.currency}`],
-        symbol: item.symbol
-      });
-
-      hasAnySymbolMetricsErrors = hasAnySymbolMetricsErrors || hasErrors;
-
-      positions.push({
-        dividend: totalDividend,
-        dividendInBaseCurrency: totalDividendInBaseCurrency,
-        timeWeightedInvestment,
-        timeWeightedInvestmentWithCurrencyEffect,
-        averagePrice: item.averagePrice,
-        currency: item.currency,
-        dataSource: item.dataSource,
-        fee: item.fee,
-        firstBuyDate: item.firstBuyDate,
-        grossPerformance: !hasErrors ? grossPerformance ?? null : null,
-        grossPerformancePercentage: !hasErrors
-          ? grossPerformancePercentage ?? null
-          : null,
-        grossPerformancePercentageWithCurrencyEffect: !hasErrors
-          ? grossPerformancePercentageWithCurrencyEffect ?? null
-          : null,
-        grossPerformanceWithCurrencyEffect: !hasErrors
-          ? grossPerformanceWithCurrencyEffect ?? null
-          : null,
-        investment: totalInvestment,
-        investmentWithCurrencyEffect: totalInvestmentWithCurrencyEffect,
-        marketPrice:
-          marketSymbolMap[endDateString]?.[item.symbol]?.toNumber() ?? null,
-        marketPriceInBaseCurrency:
-          marketPriceInBaseCurrency?.toNumber() ?? null,
-        netPerformance: !hasErrors ? netPerformance ?? null : null,
-        netPerformancePercentage: !hasErrors
-          ? netPerformancePercentage ?? null
-          : null,
-        netPerformancePercentageWithCurrencyEffect: !hasErrors
-          ? netPerformancePercentageWithCurrencyEffect ?? null
-          : null,
-        netPerformanceWithCurrencyEffect: !hasErrors
-          ? netPerformanceWithCurrencyEffect ?? null
-          : null,
-        quantity: item.quantity,
-        symbol: item.symbol,
-        tags: item.tags,
-        transactionCount: item.transactionCount,
-        valueInBaseCurrency: new Big(marketPriceInBaseCurrency).mul(
-          item.quantity
-        )
-      });
-
-      if (
-        (hasErrors ||
-          currentRateErrors.find(({ dataSource, symbol }) => {
-            return dataSource === item.dataSource && symbol === item.symbol;
-          })) &&
-        item.investment.gt(0)
-      ) {
-        errors.push({ dataSource: item.dataSource, symbol: item.symbol });
-      }
-    }
-
-    const overall = this.calculateOverallPerformance(positions);
-
-    return {
-      ...overall,
-      errors,
-      positions,
-      hasErrors: hasAnySymbolMetricsErrors || overall.hasErrors
-    };
-  }
-
-  public getDataProviderInfos() {
-    return this.dataProviderInfos;
-  }
-
-  public getInvestments(): { date: string; investment: Big }[] {
-    if (this.transactionPoints.length === 0) {
-      return [];
-    }
-
-    return this.transactionPoints.map((transactionPoint) => {
-      return {
-        date: transactionPoint.date,
-        investment: transactionPoint.items.reduce(
-          (investment, transactionPointSymbol) =>
-            investment.plus(transactionPointSymbol.investment),
-          new Big(0)
-        )
-      };
-    });
-  }
-
-  public getInvestmentsByGroup({
-    data,
-    groupBy
-  }: {
-    data: HistoricalDataItem[];
-    groupBy: GroupBy;
-  }): InvestmentItem[] {
-    const groupedData: { [dateGroup: string]: Big } = {};
-
-    for (const { date, investmentValueWithCurrencyEffect } of data) {
-      const dateGroup =
-        groupBy === 'month' ? date.substring(0, 7) : date.substring(0, 4);
-      groupedData[dateGroup] = (groupedData[dateGroup] ?? new Big(0)).plus(
-        investmentValueWithCurrencyEffect
-      );
-    }
-
-    return Object.keys(groupedData).map((dateGroup) => ({
-      date: groupBy === 'month' ? `${dateGroup}-01` : `${dateGroup}-01-01`,
-      investment: groupedData[dateGroup].toNumber()
-    }));
-  }
-
-  private calculateOverallPerformance(positions: TimelinePosition[]) {
+import { cloneDeep, first, last, sortBy } from 'lodash';
+
+export class TWRPortfolioCalculator extends PortfolioCalculator {
+  protected calculateOverallPerformance(
+    positions: TimelinePosition[]
+  ): CurrentPositions {
     let currentValueInBaseCurrency = new Big(0);
     let grossPerformance = new Big(0);
     let grossPerformanceWithCurrencyEffect = new Big(0);
@@ -835,11 +120,13 @@ export class PortfolioCalculator {
           ? new Big(0)
           : grossPerformanceWithCurrencyEffect.div(
               totalTimeWeightedInvestmentWithCurrencyEffect
-            )
+            ),
+      positions
     };
   }
 
-  private getSymbolMetrics({
+  protected getSymbolMetrics({
+    dataSource,
     end,
     exchangeRates,
     isChartMode = false,
@@ -856,8 +143,7 @@ export class PortfolioCalculator {
     };
     start: Date;
     step?: number;
-    symbol: string;
-  }): SymbolMetrics {
+  } & UniqueAsset): SymbolMetrics {
     const currentExchangeRate = exchangeRates[format(new Date(), DATE_FORMAT)];
     const currentValues: { [date: string]: Big } = {};
     const currentValuesWithCurrencyEffect: { [date: string]: Big } = {};
@@ -903,8 +189,8 @@ export class PortfolioCalculator {
 
     // Clone orders to keep the original values in this.orders
     let orders: PortfolioOrderItem[] = cloneDeep(this.orders).filter(
-      (order) => {
-        return order.symbol === symbol;
+      ({ SymbolProfile }) => {
+        return SymbolProfile.symbol === symbol;
       }
     );
 
@@ -983,28 +269,28 @@ export class PortfolioCalculator {
 
     // Add a synthetic order at the start and the end date
     orders.push({
-      symbol,
-      currency: null,
       date: format(start, DATE_FORMAT),
-      dataSource: null,
       fee: new Big(0),
       feeInBaseCurrency: new Big(0),
       itemType: 'start',
-      name: '',
       quantity: new Big(0),
+      SymbolProfile: {
+        dataSource,
+        symbol
+      },
       type: 'BUY',
       unitPrice: unitPriceAtStartDate
     });
 
     orders.push({
-      symbol,
-      currency: null,
       date: format(end, DATE_FORMAT),
-      dataSource: null,
       fee: new Big(0),
       feeInBaseCurrency: new Big(0),
       itemType: 'end',
-      name: '',
+      SymbolProfile: {
+        dataSource,
+        symbol
+      },
       quantity: new Big(0),
       type: 'BUY',
       unitPrice: unitPriceAtEndDate
@@ -1025,14 +311,14 @@ export class PortfolioCalculator {
 
         if (!hasDate) {
           orders.push({
-            symbol,
-            currency: null,
             date: format(day, DATE_FORMAT),
-            dataSource: null,
             fee: new Big(0),
             feeInBaseCurrency: new Big(0),
-            name: '',
             quantity: new Big(0),
+            SymbolProfile: {
+              dataSource,
+              symbol
+            },
             type: 'BUY',
             unitPrice:
               marketSymbolMap[format(day, DATE_FORMAT)]?.[symbol] ??

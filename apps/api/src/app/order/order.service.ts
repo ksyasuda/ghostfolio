@@ -23,7 +23,7 @@ import {
 } from '@prisma/client';
 import { Big } from 'big.js';
 import { endOfToday, isAfter } from 'date-fns';
-import { groupBy } from 'lodash';
+import { groupBy, uniqBy } from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Activities } from './interfaces/activities.interface';
@@ -198,22 +198,26 @@ export class OrderService {
   }
 
   public async getOrders({
+    endDate,
     filters,
     includeDrafts = false,
     skip,
     sortColumn,
     sortDirection,
+    startDate,
     take = Number.MAX_SAFE_INTEGER,
     types,
     userCurrency,
     userId,
     withExcludedAccounts = false
   }: {
+    endDate?: Date;
     filters?: Filter[];
     includeDrafts?: boolean;
     skip?: number;
     sortColumn?: string;
     sortDirection?: Prisma.SortOrder;
+    startDate?: Date;
     take?: number;
     types?: ActivityType[];
     userCurrency: string;
@@ -224,6 +228,18 @@ export class OrderService {
       { date: 'asc' }
     ];
     const where: Prisma.OrderWhereInput = { userId };
+
+    if (endDate || startDate) {
+      where.AND = [];
+
+      if (endDate) {
+        where.AND.push({ date: { lte: endDate } });
+      }
+
+      if (startDate) {
+        where.AND.push({ date: { gt: startDate } });
+      }
+    }
 
     const {
       ACCOUNT: filtersByAccount,
@@ -320,7 +336,32 @@ export class OrderService {
       this.prismaService.order.count({ where })
     ]);
 
+    const uniqueAssets = uniqBy(
+      orders.map(({ SymbolProfile }) => {
+        return {
+          dataSource: SymbolProfile.dataSource,
+          symbol: SymbolProfile.symbol
+        };
+      }),
+      ({ dataSource, symbol }) => {
+        return getAssetProfileIdentifier({
+          dataSource,
+          symbol
+        });
+      }
+    );
+
+    const assetProfiles =
+      await this.symbolProfileService.getSymbolProfiles(uniqueAssets);
+
     const activities = orders.map((order) => {
+      const assetProfile = assetProfiles.find(({ dataSource, symbol }) => {
+        return (
+          dataSource === order.SymbolProfile.dataSource &&
+          symbol === order.SymbolProfile.symbol
+        );
+      });
+
       const value = new Big(order.quantity).mul(order.unitPrice).toNumber();
 
       return {
@@ -332,6 +373,7 @@ export class OrderService {
           order.SymbolProfile.currency,
           userCurrency
         ),
+        SymbolProfile: assetProfile,
         // TODO: Use exchange rate of date
         valueInBaseCurrency: this.exchangeRateDataService.toCurrency(
           value,
