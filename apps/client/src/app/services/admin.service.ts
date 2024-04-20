@@ -72,6 +72,10 @@ export class AdminService {
     return this.http.delete<void>(`/api/v1/tag/${aId}`);
   }
 
+  public executeJob(aId: string) {
+    return this.http.get<void>(`/api/v1/admin/queue/job/${aId}/execute`);
+  }
+
   public fetchAdminData() {
     return this.http.get<AdminData>('/api/v1/admin');
   }
@@ -211,7 +215,8 @@ export class AdminService {
     scraperConfiguration,
     sectors,
     symbol,
-    symbolMapping
+    symbolMapping,
+    url
   }: UniqueAsset & UpdateAssetProfileDto) {
     return this.http.patch<EnhancedSymbolProfile>(
       `/api/v1/admin/profile-data/${dataSource}/${symbol}`,
@@ -224,7 +229,8 @@ export class AdminService {
         name,
         scraperConfiguration,
         sectors,
-        symbolMapping
+        symbolMapping,
+        url
       }
     );
   }

@@ -12,6 +12,8 @@ export interface PortfolioPositionDetail {
   averagePrice: number;
   dataProviderInfo: DataProviderInfo;
   dividendInBaseCurrency: number;
+  dividendYieldPercent: number;
+  dividendYieldPercentWithCurrencyEffect: number;
   feeInBaseCurrency: number;
   firstBuyDate: string;
   grossPerformance: number;
@@ -33,10 +35,4 @@ export interface PortfolioPositionDetail {
   tags: Tag[];
   transactionCount: number;
   value: number;
-}
-
-export interface HistoricalDataContainer {
-  isAllTimeHigh: boolean;
-  isAllTimeLow: boolean;
-  items: HistoricalDataItem[];
 }

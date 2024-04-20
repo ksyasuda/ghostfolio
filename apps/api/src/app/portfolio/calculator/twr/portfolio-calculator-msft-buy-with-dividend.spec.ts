@@ -59,6 +59,10 @@ describe('PortfolioCalculator', () => {
 
   describe('get current positions', () => {
     it.only('with MSFT buy', async () => {
+      const spy = jest
+        .spyOn(Date, 'now')
+        .mockImplementation(() => parseDate('2023-07-10').getTime());
+
       const activities: Activity[] = [
         {
           ...activityDummyData,
@@ -98,17 +102,13 @@ describe('PortfolioCalculator', () => {
         currency: 'USD'
       });
 
-      const spy = jest
-        .spyOn(Date, 'now')
-        .mockImplementation(() => parseDate('2023-07-10').getTime());
-
-      const currentPositions = await portfolioCalculator.getCurrentPositions(
+      const portfolioSnapshot = await portfolioCalculator.computeSnapshot(
         parseDate('2023-07-10')
       );
 
       spy.mockRestore();
 
-      expect(currentPositions).toMatchObject({
+      expect(portfolioSnapshot).toMatchObject({
         errors: [],
         hasErrors: false,
         positions: [
@@ -126,12 +126,16 @@ describe('PortfolioCalculator', () => {
             marketPriceInBaseCurrency: 331.83,
             quantity: new Big('1'),
             symbol: 'MSFT',
-            tags: undefined,
+            tags: [],
             transactionCount: 2
           }
         ],
+        totalFeesWithCurrencyEffect: new Big('19'),
+        totalInterestWithCurrencyEffect: new Big('0'),
         totalInvestment: new Big('298.58'),
-        totalInvestmentWithCurrencyEffect: new Big('298.58')
+        totalInvestmentWithCurrencyEffect: new Big('298.58'),
+        totalLiabilitiesWithCurrencyEffect: new Big('0'),
+        totalValuablesWithCurrencyEffect: new Big('0')
       });
     });
   });

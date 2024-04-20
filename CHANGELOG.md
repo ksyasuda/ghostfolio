@@ -5,21 +5,103 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.74.0 - 2024-04-20
+
+### Added
+
+- Added the date range support to the portfolio holdings page
+- Added support to create an account balance
+
+### Changed
+
+- Removed the date range support in the activities table on the portfolio activities page (experimental)
+- Improved the language localization for German (`de`)
+- Upgraded `angular` from version `17.3.3` to `17.3.5`
+- Upgraded `Nx` from version `18.2.3` to `18.3.3`
+
+### Fixed
+
+- Fixed gaps in the portfolio performance charts by considering `BUY` and `SELL` activities
+
+## 2.73.0 - 2024-04-17
+
+### Added
+
+- Added a form validation against the DTO in the create or update account dialog
+- Added a form validation against the DTO in the create or update activity dialog
+
+### Changed
+
+- Moved the dividend calculations into the portfolio calculator
+- Moved the fee calculations into the portfolio calculator
+- Moved the interest calculations into the portfolio calculator
+- Moved the liability calculations into the portfolio calculator
+- Moved the (wealth) item calculations into the portfolio calculator
+- Let queue jobs for asset profile data gathering fail by throwing an error
+- Let queue jobs for historical market data gathering fail by throwing an error
+- Upgraded `yahoo-finance2` from version `2.11.1` to `2.11.2`
+
+## 2.72.0 - 2024-04-13
+
+### Added
+
+- Added support to immediately execute a queue job from the admin control panel
+- Added a priority column to the queue jobs view in the admin control panel
+
+### Changed
+
+- Adapted the priorities of queue jobs
+- Upgraded `angular` from version `17.2.4` to `17.3.3`
+- Upgraded `Nx` from version `18.1.2` to `18.2.3`
+- Upgraded `prisma` from version `5.11.0` to `5.12.1`
+- Upgraded `yahoo-finance2` from version `2.11.0` to `2.11.1`
+
+### Fixed
+
+- Fixed an issue in the public page
+
+## 2.71.0 - 2024-04-07
+
+### Added
+
+- Added the dividend yield to the position detail dialog (experimental)
+- Added support to override the asset class of an asset profile in the asset profile details dialog of the admin control
+- Added support to override the asset sub class of an asset profile in the asset profile details dialog of the admin control
+- Added support to override the url of an asset profile in the asset profile details dialog of the admin control
+- Added the asset profile icon to the asset profile details dialog of the admin control
+- Added the platform icon to the create or update platform dialog of the admin control
+- Extended the rules in the _X-ray_ section by a `key`
+- Added `currency` to the `Order` database schema as a preparation to set a custom currency
+- Extended the content of the _Self-Hosting_ section by the data providers on the Frequently Asked Questions (FAQ) page
+
+### Changed
+
+- Optimized the calculation of allocations by market
+- Improved the url validation in the create and update platform endpoint
+- Improved the language localization for German (`de`)
+
+### Fixed
+
+- Fixed the missing tags in the portfolio calculations
+
+## 2.70.0 - 2024-04-02
 
 ### Added
 
 - Set up the language localization for Chinese (`zh`)
+- Added `init: true` to the `docker-compose` files (`docker-compose.yml` and `docker-compose.build.yml`) to avoid zombie processes
 - Set up _Webpack Bundle Analyzer_
 
 ### Changed
 
+- Disabled the option to update the cash balance of an account if date is not today
 - Improved the usability of the date range support by specific years (`2023`, `2022`, `2021`, etc.) in the assistant (experimental)
 - Introduced a factory for the portfolio calculations to support different algorithms in future
 
 ### Fixed
 
 - Fixed the duplicated tags in the position detail dialog
+- Removed `Tini` from the docker image
 
 ## 2.69.0 - 2024-03-30
 

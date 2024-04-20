@@ -78,9 +78,9 @@ export class PortfolioController {
     @Query('assetClasses') filterByAssetClasses?: string,
     @Query('range') dateRange: DateRange = 'max',
     @Query('tags') filterByTags?: string,
-    @Query('withLiabilities') withLiabilitiesParam = 'false'
+    @Query('withMarkets') withMarketsParam = 'false'
   ): Promise<PortfolioDetails & { hasError: boolean }> {
-    const withLiabilities = withLiabilitiesParam === 'true';
+    const withMarkets = withMarketsParam === 'true';
 
     let hasDetails = true;
     let hasError = false;
@@ -105,7 +105,7 @@ export class PortfolioController {
         dateRange,
         filters,
         impersonationId,
-        withLiabilities,
+        withMarkets,
         userId: this.request.user.id,
         withSummary: true
       });
@@ -290,6 +290,7 @@ export class PortfolioController {
     @Query('assetClasses') filterByAssetClasses?: string,
     @Query('holdingType') filterByHoldingType?: string,
     @Query('query') filterBySearchQuery?: string,
+    @Query('range') dateRange: DateRange = 'max',
     @Query('tags') filterByTags?: string
   ): Promise<PortfolioHoldingsResponse> {
     const filters = this.apiService.buildFiltersFromQueryParams({
@@ -301,6 +302,7 @@ export class PortfolioController {
     });
 
     const { holdings } = await this.portfolioService.getDetails({
+      dateRange,
       filters,
       impersonationId,
       userId: this.request.user.id
@@ -386,11 +388,9 @@ export class PortfolioController {
     @Query('assetClasses') filterByAssetClasses?: string,
     @Query('range') dateRange: DateRange = 'max',
     @Query('tags') filterByTags?: string,
-    @Query('withExcludedAccounts') withExcludedAccountsParam = 'false',
-    @Query('withItems') withItemsParam = 'false'
+    @Query('withExcludedAccounts') withExcludedAccountsParam = 'false'
   ): Promise<PortfolioPerformanceResponse> {
     const withExcludedAccounts = withExcludedAccountsParam === 'true';
-    const withItems = withItemsParam === 'true';
 
     const hasReadRestrictedAccessPermission =
       this.userService.hasReadRestrictedAccessPermission({
@@ -409,7 +409,6 @@ export class PortfolioController {
       filters,
       impersonationId,
       withExcludedAccounts,
-      withItems,
       userId: this.request.user.id
     });
 
@@ -536,7 +535,8 @@ export class PortfolioController {
     const { holdings } = await this.portfolioService.getDetails({
       filters: [{ id: 'EQUITY', type: 'ASSET_CLASS' }],
       impersonationId: access.userId,
-      userId: user.id
+      userId: user.id,
+      withMarkets: true
     });
 
     const portfolioPublicDetails: PortfolioPublicDetails = {

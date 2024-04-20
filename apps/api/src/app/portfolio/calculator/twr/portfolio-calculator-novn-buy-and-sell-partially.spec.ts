@@ -46,6 +46,10 @@ describe('PortfolioCalculator', () => {
 
   describe('get current positions', () => {
     it.only('with NOVN.SW buy and sell partially', async () => {
+      const spy = jest
+        .spyOn(Date, 'now')
+        .mockImplementation(() => parseDate('2022-04-11').getTime());
+
       const activities: Activity[] = [
         {
           ...activityDummyData,
@@ -84,15 +88,12 @@ describe('PortfolioCalculator', () => {
         calculationType: PerformanceCalculationType.TWR,
         currency: 'CHF'
       });
-      const spy = jest
-        .spyOn(Date, 'now')
-        .mockImplementation(() => parseDate('2022-04-11').getTime());
 
       const chartData = await portfolioCalculator.getChartData({
         start: parseDate('2022-03-07')
       });
 
-      const currentPositions = await portfolioCalculator.getCurrentPositions(
+      const portfolioSnapshot = await portfolioCalculator.computeSnapshot(
         parseDate('2022-03-07')
       );
 
@@ -105,7 +106,7 @@ describe('PortfolioCalculator', () => {
 
       spy.mockRestore();
 
-      expect(currentPositions).toEqual({
+      expect(portfolioSnapshot).toEqual({
         currentValueInBaseCurrency: new Big('87.8'),
         errors: [],
         grossPerformance: new Big('21.93'),
@@ -148,6 +149,7 @@ describe('PortfolioCalculator', () => {
             marketPriceInBaseCurrency: 87.8,
             quantity: new Big('1'),
             symbol: 'NOVN.SW',
+            tags: [],
             timeWeightedInvestment: new Big('145.10285714285714285714'),
             timeWeightedInvestmentWithCurrencyEffect: new Big(
               '145.10285714285714285714'
@@ -156,8 +158,12 @@ describe('PortfolioCalculator', () => {
             valueInBaseCurrency: new Big('87.8')
           }
         ],
+        totalFeesWithCurrencyEffect: new Big('4.25'),
+        totalInterestWithCurrencyEffect: new Big('0'),
         totalInvestment: new Big('75.80'),
-        totalInvestmentWithCurrencyEffect: new Big('75.80')
+        totalInvestmentWithCurrencyEffect: new Big('75.80'),
+        totalLiabilitiesWithCurrencyEffect: new Big('0'),
+        totalValuablesWithCurrencyEffect: new Big('0')
       });
 
       expect(investments).toEqual([

@@ -4,6 +4,7 @@ import { ExchangeRateDataService } from '@ghostfolio/api/services/exchange-rate-
 import { PrismaService } from '@ghostfolio/api/services/prisma/prisma.service';
 import { SymbolProfileService } from '@ghostfolio/api/services/symbol-profile/symbol-profile.service';
 import {
+  DATA_GATHERING_QUEUE_PRIORITY_HIGH,
   GATHER_ASSET_PROFILE_PROCESS,
   GATHER_ASSET_PROFILE_PROCESS_OPTIONS
 } from '@ghostfolio/common/config';
@@ -26,6 +27,7 @@ import { endOfToday, isAfter } from 'date-fns';
 import { groupBy, uniqBy } from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 
+import { CreateOrderDto } from './create-order.dto';
 import { Activities } from './interfaces/activities.interface';
 
 @Injectable()
@@ -65,7 +67,6 @@ export class OrderService {
     }
 
     const accountId = data.accountId;
-    let currency = data.currency;
     const tags = data.tags ?? [];
     const updateAccountBalance = data.updateAccountBalance ?? false;
     const userId = data.userId;
@@ -73,7 +74,6 @@ export class OrderService {
     if (['FEE', 'INTEREST', 'ITEM', 'LIABILITY'].includes(data.type)) {
       const assetClass = data.assetClass;
       const assetSubClass = data.assetSubClass;
-      currency = data.SymbolProfile.connectOrCreate.create.currency;
       const dataSource: DataSource = 'MANUAL';
       const id = uuidv4();
       const name = data.SymbolProfile.connectOrCreate.create.symbol;
@@ -81,7 +81,6 @@ export class OrderService {
       data.id = id;
       data.SymbolProfile.connectOrCreate.create.assetClass = assetClass;
       data.SymbolProfile.connectOrCreate.create.assetSubClass = assetSubClass;
-      data.SymbolProfile.connectOrCreate.create.currency = currency;
       data.SymbolProfile.connectOrCreate.create.dataSource = dataSource;
       data.SymbolProfile.connectOrCreate.create.name = name;
       data.SymbolProfile.connectOrCreate.create.symbol = id;
@@ -103,7 +102,8 @@ export class OrderService {
           jobId: getAssetProfileIdentifier({
             dataSource: data.SymbolProfile.connectOrCreate.create.dataSource,
             symbol: data.SymbolProfile.connectOrCreate.create.symbol
-          })
+          }),
+          priority: DATA_GATHERING_QUEUE_PRIORITY_HIGH
         }
       });
     }
@@ -116,7 +116,6 @@ export class OrderService {
       delete data.comment;
     }
 
-    delete data.currency;
     delete data.dataSource;
     delete data.symbol;
     delete data.tags;
@@ -155,8 +154,8 @@ export class OrderService {
       await this.accountService.updateAccountBalance({
         accountId,
         amount,
-        currency,
         userId,
+        currency: data.SymbolProfile.connectOrCreate.create.currency,
         date: data.date as Date
       });
     }
@@ -430,19 +429,22 @@ export class OrderService {
 
       if (!isDraft) {
         // Gather symbol data of order in the background, if not draft
-        this.dataGatheringService.gatherSymbols([
-          {
-            dataSource: data.SymbolProfile.connect.dataSource_symbol.dataSource,
-            date: <Date>data.date,
-            symbol: data.SymbolProfile.connect.dataSource_symbol.symbol
-          }
-        ]);
+        this.dataGatheringService.gatherSymbols({
+          dataGatheringItems: [
+            {
+              dataSource:
+                data.SymbolProfile.connect.dataSource_symbol.dataSource,
+              date: <Date>data.date,
+              symbol: data.SymbolProfile.connect.dataSource_symbol.symbol
+            }
+          ],
+          priority: DATA_GATHERING_QUEUE_PRIORITY_HIGH
+        });
       }
     }
 
     delete data.assetClass;
     delete data.assetSubClass;
-    delete data.currency;
     delete data.dataSource;
     delete data.symbol;
     delete data.tags;

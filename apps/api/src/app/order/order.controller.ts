@@ -7,7 +7,10 @@ import { TransformDataSourceInResponseInterceptor } from '@ghostfolio/api/interc
 import { ApiService } from '@ghostfolio/api/services/api/api.service';
 import { DataGatheringService } from '@ghostfolio/api/services/data-gathering/data-gathering.service';
 import { ImpersonationService } from '@ghostfolio/api/services/impersonation/impersonation.service';
-import { HEADER_KEY_IMPERSONATION } from '@ghostfolio/common/config';
+import {
+  DATA_GATHERING_QUEUE_PRIORITY_HIGH,
+  HEADER_KEY_IMPERSONATION
+} from '@ghostfolio/common/config';
 import { hasPermission, permissions } from '@ghostfolio/common/permissions';
 import type { DateRange, RequestWithUser } from '@ghostfolio/common/types';
 
@@ -126,13 +129,22 @@ export class OrderController {
   @UseGuards(AuthGuard('jwt'), HasPermissionGuard)
   @UseInterceptors(TransformDataSourceInRequestInterceptor)
   public async createOrder(@Body() data: CreateOrderDto): Promise<OrderModel> {
+    const currency = data.currency;
+    const customCurrency = data.customCurrency;
+
+    if (customCurrency) {
+      data.currency = customCurrency;
+
+      delete data.customCurrency;
+    }
+
     const order = await this.orderService.createOrder({
       ...data,
       date: parseISO(data.date),
       SymbolProfile: {
         connectOrCreate: {
           create: {
-            currency: data.currency,
+            currency,
             dataSource: data.dataSource,
             symbol: data.symbol
           },
@@ -151,13 +163,16 @@ export class OrderController {
     if (data.dataSource && !order.isDraft) {
       // Gather symbol data in the background, if data source is set
       // (not MANUAL) and not draft
-      this.dataGatheringService.gatherSymbols([
-        {
-          dataSource: data.dataSource,
-          date: order.date,
-          symbol: data.symbol
-        }
-      ]);
+      this.dataGatheringService.gatherSymbols({
+        dataGatheringItems: [
+          {
+            dataSource: data.dataSource,
+            date: order.date,
+            symbol: data.symbol
+          }
+        ],
+        priority: DATA_GATHERING_QUEUE_PRIORITY_HIGH
+      });
     }
 
     return order;
@@ -182,7 +197,15 @@ export class OrderController {
     const date = parseISO(data.date);
 
     const accountId = data.accountId;
+    const customCurrency = data.customCurrency;
+
     delete data.accountId;
+
+    if (customCurrency) {
+      data.currency = customCurrency;
+
+      delete data.customCurrency;
+    }
 
     return this.orderService.updateOrder({
       data: {
